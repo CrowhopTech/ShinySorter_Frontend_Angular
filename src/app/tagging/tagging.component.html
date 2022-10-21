@@ -1,2 +1,5 @@
-<app-toolbar (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
-Tagging screen!
+<!-- Outer div necessary to keep everything nicely vertically aligned -->
+<div class="h-full flex flex-col">
+    <app-toolbar class="flex-0" (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
+    Tagging screen!
+</div>

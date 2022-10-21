@@ -1,2 +1,59 @@
-<app-toolbar (onTagClick)="router.navigate(['/tag'])" [currentMode]="'Searching'"></app-toolbar>
-Searching screen!
+<!-- Outer div necessary to keep everything nicely vertically aligned -->
+<div class="h-full flex flex-col">
+    <app-toolbar class="flex-0" (onTagClick)="router.navigate(['/tag'])" [currentMode]="'Searching'"></app-toolbar>
+    <mat-sidenav-container class="flex-grow">
+        <mat-sidenav opened="true" mode="side" class="min-w-fit w-fit p-3">
+            <div class="tags-cols grid grid-cols-3">
+                <div class="tag-col px-3">
+                    <ul>
+                        <li *ngFor="let tag of unusedTags()">
+                            <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="true" [removeVisible]="true"
+                                (addClicked)="tagAction('include', tag.id)"
+                                (removeClicked)="tagAction('exclude', tag.id)">
+                            </app-tagquery>
+                        </li>
+                    </ul>
+                </div>
+                <div class="tag-col px-3">
+                    <div class="flex flex-row">
+                        <h2 class="flex-grow-0">Require...</h2>
+                        <app-exclusivetoggle class="flex-grow" [value]="includeMode"
+                            (valueChanged)="navigateToParams(includedTagIDs, excludedTagIDs, $event, excludeMode)">
+                        </app-exclusivetoggle>
+                    </div>
+                    <ul>
+                        <li *ngFor="let tag of includedTags()">
+                            <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="false" [removeVisible]="true"
+                                (removeClicked)="tagAction('neutral', tag.id)"></app-tagquery>
+                        </li>
+                    </ul>
+                </div>
+                <div class="tag-col px-3">
+                    <div class="flex flex-row">
+                        <h2 class="flex-grow-0">But exclude...</h2>
+                        <app-exclusivetoggle class="flex-grow" [value]="excludeMode"
+                            (valueChanged)="navigateToParams(includedTagIDs, excludedTagIDs, includeMode, $event)">
+                        </app-exclusivetoggle>
+                    </div>
+                    <ul>
+                        <li *ngFor="let tag of excludedTags()">
+                            <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="true" [removeVisible]="false"
+                                (addClicked)="tagAction('neutral', tag.id)"></app-tagquery>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </mat-sidenav>
+        <mat-sidenav-content class="p-3">
+            <h1>Search Query</h1>
+            <h2>Include {{includeMode}} tags:</h2>
+            <ul>
+                <li *ngFor="let tag of includedTags()">{{tag.id}}</li>
+            </ul>
+            <h2>Exclude {{excludeMode}} tags:</h2>
+            <ul>
+                <li *ngFor="let tag of excludedTags()">{{tag.id}}</li>
+            </ul>
+        </mat-sidenav-content>
+    </mat-sidenav-container>
+</div>
