@@ -1,7 +1,9 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ParseError } from '@angular/compiler';
 import { Component, EventEmitter, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { APIServerService, Tag } from '../apiserver.service';
+import { Observable, Subscription } from 'rxjs';
+import { APIServerService, FileQuery, SearchMode, Tag, File } from '../apiserver.service';
 
 const includeTagsParam = "includeTags"
 const excludeTagsParam = "excludeTags"
@@ -17,121 +19,92 @@ export class SearchingComponent implements OnInit {
   searchBarOpen = false;
 
   allTags: Tag[] | undefined = undefined
-  includedTagIDs: number[] = []
-  excludedTagIDs: number[] = []
+  searchResult: File[] | undefined = undefined
 
-  includeMode: "all" | "any" = "all"
-  excludeMode: "all" | "any" = "all"
+  query: FileQuery = new FileQuery([], [], "all", "all")
+  searchSubscription: Subscription | null = null
 
-  includedTags() {
-    if (!this.allTags) return undefined
-    return this.allTags.filter(tag => this.includedTagIDs.find(id => tag.id === id))
+  private getNumberArrayParam(params: Params, param: string): number[] {
+    const val: string = params[param]
+    if (!val) {
+      return []
+    }
+
+    const split = val.split(",")
+    const parsed = split.map(s => parseInt(s))
+    return parsed
   }
 
-  excludedTags() {
-    if (!this.allTags) return undefined
-    return this.allTags.filter(tag => this.excludedTagIDs.find(id => tag.id === id))
-  }
+  private getSearchModeParam(params: Params, param: string, def: SearchMode): SearchMode {
+    const val: string = params[param]
+    if (!val) {
+      return def
+    }
 
-  unusedTags() {
-    if (!this.allTags) return undefined
-    return this.allTags.filter(tag => (!this.includedTagIDs.find(id => tag.id === id) && !this.excludedTagIDs.find(id => tag.id === id)))
+    switch (val) {
+      case "any":
+        return "any"
+      case "all":
+        return "all"
+      default:
+        throw new SyntaxError("includeMode should be 'all' or 'any'")
+    }
   }
 
   constructor(public router: Router, private route: ActivatedRoute, private apiServer: APIServerService) {
     this.route.queryParams.subscribe(params => {
-      this.includedTagIDs = []
-      const includeTags: string = params[includeTagsParam]
-      if (includeTags) {
-        const includeSplit = includeTags.split(",")
-        const includeParsed = includeSplit.map(s => parseInt(s))
-        this.includedTagIDs = includeParsed
-      }
+      this.query.includeTags = this.getNumberArrayParam(params, includeTagsParam)
+      this.query.excludeTags = this.getNumberArrayParam(params, excludeTagsParam)
 
-      this.excludedTagIDs = []
-      const excludeTags: string = params[excludeTagsParam]
-      if (excludeTags) {
-        const excludeSplit = excludeTags.split(",")
-        const excludeParsed = excludeSplit.map(s => parseInt(s))
-        this.excludedTagIDs = excludeParsed
-      }
+      this.query.includeMode = this.getSearchModeParam(params, includeModeParam, "all")
+      this.query.excludeMode = this.getSearchModeParam(params, excludeModeParam, "all")
 
-      this.includeMode = "all"
-      const includeMode: string = params[includeModeParam]
-      if (includeMode) {
-        switch (includeMode) {
-          case "any":
-            this.includeMode = "any"
-            break
-          case "all":
-            this.includeMode = "all"
-            break
-          default:
-            throw new SyntaxError("includeMode should be 'all' or 'any'")
-        }
+      if (this.searchSubscription) {
+        this.searchSubscription.unsubscribe()
       }
-
-      this.excludeMode = "all"
-      const excludeMode: string = params[excludeModeParam]
-      if (excludeMode) {
-        switch (excludeMode) {
-          case "any":
-            this.excludeMode = "any"
-            break
-          case "all":
-            this.excludeMode = "all"
-            break
-          default:
-            throw new SyntaxError("excludeMode should be 'all' or 'any'")
-        }
-      }
+      this.searchResult = undefined
+      this.searchSubscription = this.apiServer.getFiles(this.query).subscribe((files) => {
+        this.searchResult = files
+      })
     })
   }
 
   navigateToParams(includeTags: number[], excludeTags: number[], includeMode: "any" | "all", excludeMode: "any" | "all") {
-    let params: Params = {}
-    if (includeTags.length > 0) {
-      params[includeTagsParam] = includeTags.join(",")
-      params[includeModeParam] = includeMode
-    }
-    if (excludeTags.length > 0) {
-      params[excludeTagsParam] = excludeTags.join(",")
-      params[excludeModeParam] = excludeMode
-    }
-
     this.router.navigate(["/search"], {
-      queryParams: params
+      queryParams: new FileQuery(includeTags, excludeTags, includeMode, excludeMode).
+        searchPageParams(includeTagsParam, includeModeParam, excludeTagsParam, excludeModeParam)
     })
   }
 
+  // Called when a tag is moved from one category to another
   tagAction(action: "include" | "exclude" | "neutral", tag: number) {
     const newInclude = new Set<number>();
     const newExclude = new Set<number>();
     switch (action) {
       case "include":
         newInclude.add(tag)
-        this.includedTagIDs.forEach(t => newInclude.add(t))
+        this.query.includeTags.forEach(t => newInclude.add(t))
 
-        this.excludedTagIDs.filter(t => t !== tag).forEach(t => newExclude.add(t))
+        this.query.excludeTags.filter(t => t !== tag).forEach(t => newExclude.add(t))
         break;
       case "exclude":
         newExclude.add(tag)
-        this.excludedTagIDs.forEach(t => newExclude.add(t))
+        this.query.excludeTags.forEach(t => newExclude.add(t))
 
-        this.includedTagIDs.filter(t => t !== tag).forEach(t => newInclude.add(t))
+        this.query.includeTags.filter(t => t !== tag).forEach(t => newInclude.add(t))
         break;
       case "neutral":
         // Remove from both included and excluded
-        this.excludedTagIDs.filter(t => t !== tag).forEach(t => newExclude.add(t))
-        this.includedTagIDs.filter(t => t !== tag).forEach(t => newInclude.add(t))
+        this.query.excludeTags.filter(t => t !== tag).forEach(t => newExclude.add(t))
+        this.query.includeTags.filter(t => t !== tag).forEach(t => newInclude.add(t))
         break;
     }
 
     this.navigateToParams(
       Array.from(newInclude),
       Array.from(newExclude),
-      this.includeMode,
-      this.excludeMode
+      this.query.includeMode,
+      this.query.excludeMode
     )
   }
 

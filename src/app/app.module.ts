@@ -8,13 +8,15 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TaggingComponent } from './tagging/tagging.component';
 import { SearchingComponent } from './searching/searching.component';
 import { TagqueryComponent } from './searching/tagquery/tagquery.component';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { ExclusivetoggleComponent } from './searching/exclusivetoggle/exclusivetoggle.component';
 
 @NgModule({
@@ -34,6 +36,8 @@ import { ExclusivetoggleComponent } from './searching/exclusivetoggle/exclusivet
     MatIconModule,
     MatButtonModule,
     MatButtonToggleModule,
+    MatDividerModule,
+    MatProgressSpinnerModule,
     MatSlideToggleModule,
     MatSidenavModule,
     HttpClientModule,

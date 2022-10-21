@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable, mergeMap, of, filter, tap } from 'rxjs';
+import { Params } from '@angular/router';
+import { map, Observable, mergeMap, of, filter, tap, Operator, OperatorFunction, MonoTypeOperatorFunction, catchError } from 'rxjs';
 
 export class File {
   constructor(public id: string,
@@ -25,6 +26,63 @@ export class Question {
     public mutuallyExclusive: boolean) { }
 }
 
+export type SearchMode = "any" | "all"
+
+export class FileQuery {
+  static includeTagsParam = "includeTags"
+  static excludeTagsParam = "excludeTags"
+  static includeModeParam = "includeOperator"
+  static excludeModeParam = "excludeOperator"
+
+  constructor(public includeTags: number[],
+    public excludeTags: number[],
+    public includeMode: SearchMode,
+    public excludeMode: SearchMode) { }
+
+  public httpParams(): HttpParams {
+    let params = new HttpParams();
+    if (this.includeTags.length > 0) {
+      params = params.set(FileQuery.includeTagsParam, this.includeTags.join(","))
+      params = params.set(FileQuery.includeModeParam, this.includeMode)
+    }
+    if (this.excludeTags.length > 0) {
+      params = params.set(FileQuery.excludeTagsParam, this.excludeTags.join(","))
+      params = params.set(FileQuery.excludeModeParam, this.excludeMode)
+    }
+
+    return params
+  }
+
+  public searchPageParams(itName: string, imName: string, etName: string, emName: string): Params {
+    let params: Params = {}
+    if (this.includeTags.length > 0) {
+      params[itName] = this.includeTags.join(",")
+      params[imName] = this.includeMode
+    }
+    if (this.excludeTags.length > 0) {
+      params[etName] = this.excludeTags.join(",")
+      params[emName] = this.excludeMode
+    }
+
+    return params
+  }
+
+  public getIncludedTags(allTags: Tag[] | undefined): Tag[] {
+    if (!allTags) return []
+    return allTags.filter(tag => this.includeTags.find(id => tag.id === id))
+  }
+
+  public getExcludedTags(allTags: Tag[] | undefined): Tag[] {
+    if (!allTags) return []
+    return allTags.filter(tag => this.excludeTags.find(id => tag.id === id))
+  }
+
+  public getUnusedTags(allTags: Tag[] | undefined): Tag[] {
+    if (!allTags) return []
+    return allTags.filter(tag => (!this.includeTags.find(id => tag.id === id) && !this.excludeTags.find(id => tag.id === id)))
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -39,9 +97,13 @@ export class APIServerService {
 
   constructor(private http: HttpClient) { }
 
+  responseToObjArray<T>(obs: Observable<Object>) {
+    return map((original: Object) => (original as Object[]).map(element => element as T))(obs)
+  }
+
   public listTags(): Observable<Tag[]> {
     return this.http.get(`${this.apiServerAddress}/tags`).pipe(
-      map(o => (o as Object[]).map(t => t as Tag)),
+      this.responseToObjArray<Tag>,
       tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.name)))
     )
   }
@@ -59,5 +121,14 @@ export class APIServerService {
         map(tags => tags.filter(t => t.id === tagID)),
         map(tags => tags[0].name)
       )
+  }
+
+  public getFiles(query: FileQuery): Observable<File[]> {
+    return this.http.get(`${this.apiServerAddress}/files`, { params: query.httpParams() }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
+      if (err instanceof HttpErrorResponse) {
+        return of([] as File[])
+      }
+      throw err
+    }))
   }
 }

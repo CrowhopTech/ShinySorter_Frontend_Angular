@@ -3,10 +3,11 @@
     <app-toolbar class="flex-0" (onTagClick)="router.navigate(['/tag'])" [currentMode]="'Searching'"></app-toolbar>
     <mat-sidenav-container class="flex-grow">
         <mat-sidenav opened="true" mode="side" class="min-w-fit w-fit p-3">
-            <div class="tags-cols grid grid-cols-3">
-                <div class="tag-col px-3">
+            <div class="tags-cols flex flex-row pb-1.5">
+                <!-- TODO! Split this into a separate component where all it does is take a FileQuery object and input-->
+                <div class="tag-col px-3 flex-grow">
                     <ul>
-                        <li *ngFor="let tag of unusedTags()">
+                        <li *ngFor="let tag of query.getUnusedTags(allTags)">
                             <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="true" [removeVisible]="true"
                                 (addClicked)="tagAction('include', tag.id)"
                                 (removeClicked)="tagAction('exclude', tag.id)">
@@ -14,46 +15,57 @@
                         </li>
                     </ul>
                 </div>
-                <div class="tag-col px-3">
+                <mat-divider vertical="true" class="flex-grow-0"></mat-divider>
+                <div class="tag-col px-3 flex-grow">
                     <div class="flex flex-row">
                         <h2 class="flex-grow-0">Require...</h2>
-                        <app-exclusivetoggle class="flex-grow" [value]="includeMode"
-                            (valueChanged)="navigateToParams(includedTagIDs, excludedTagIDs, $event, excludeMode)">
+                        <app-exclusivetoggle class="flex-grow" [value]="query.includeMode"
+                            (valueChanged)="navigateToParams(query.includeTags, query.excludeTags, $event, query.excludeMode)">
                         </app-exclusivetoggle>
                     </div>
                     <ul>
-                        <li *ngFor="let tag of includedTags()">
+                        <li *ngFor="let tag of query.getIncludedTags(allTags)">
                             <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="false" [removeVisible]="true"
                                 (removeClicked)="tagAction('neutral', tag.id)"></app-tagquery>
                         </li>
                     </ul>
                 </div>
-                <div class="tag-col px-3">
+                <mat-divider vertical="true" class="flex-grow-0"></mat-divider>
+                <div class="tag-col px-3 flex-grow">
                     <div class="flex flex-row">
                         <h2 class="flex-grow-0">But exclude...</h2>
-                        <app-exclusivetoggle class="flex-grow" [value]="excludeMode"
-                            (valueChanged)="navigateToParams(includedTagIDs, excludedTagIDs, includeMode, $event)">
+                        <app-exclusivetoggle class="flex-grow" [value]="query.excludeMode"
+                            (valueChanged)="navigateToParams(query.includeTags, query.excludeTags, query.includeMode, $event)">
                         </app-exclusivetoggle>
                     </div>
                     <ul>
-                        <li *ngFor="let tag of excludedTags()">
+                        <li *ngFor="let tag of query.getExcludedTags(allTags)">
                             <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="true" [removeVisible]="false"
                                 (addClicked)="tagAction('neutral', tag.id)"></app-tagquery>
                         </li>
                     </ul>
                 </div>
             </div>
+            <mat-divider></mat-divider>
         </mat-sidenav>
         <mat-sidenav-content class="p-3">
             <h1>Search Query</h1>
-            <h2>Include {{includeMode}} tags:</h2>
-            <ul>
-                <li *ngFor="let tag of includedTags()">{{tag.id}}</li>
+            <h2 *ngIf="query.includeTags.length > 0">Include {{query.includeMode}} tags:</h2>
+            <ul *ngIf="query.includeTags.length > 0">
+                <li *ngFor="let tag of query.getIncludedTags(allTags)">{{tag.id}}</li>
             </ul>
-            <h2>Exclude {{excludeMode}} tags:</h2>
-            <ul>
-                <li *ngFor="let tag of excludedTags()">{{tag.id}}</li>
+            <h2 *ngIf="query.excludeTags.length > 0">Exclude {{query.excludeMode}} tags:</h2>
+            <ul *ngIf="query.excludeTags.length > 0">
+                <li *ngFor="let tag of query.getExcludedTags(allTags)">{{tag.id}}</li>
             </ul>
+            <h2 *ngIf="query.includeTags.length == 0 && query.excludeTags.length == 0"><i>All files</i></h2>
+            <mat-divider class="py-3"></mat-divider>
+            <h1>Results</h1>
+            <h2 *ngIf="searchResult !== undefined && searchResult.length == 0">No results</h2>
+            <ul *ngIf="searchResult && searchResult.length > 0">
+                <li *ngFor="let file of searchResult">{{file.id}}</li>
+            </ul>
+            <mat-spinner *ngIf="searchResult === undefined" diameter="50"></mat-spinner>
         </mat-sidenav-content>
     </mat-sidenav-container>
 </div>
