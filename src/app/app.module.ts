@@ -8,16 +8,19 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatGridListModule } from '@angular/material/grid-list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TaggingComponent } from './tagging/tagging.component';
 import { SearchingComponent } from './searching/searching.component';
-import { TagqueryComponent } from './searching/tagquery/tagquery.component';
+import { TagqueryComponent } from './searching/searchinput/tagquery/tagquery.component';
 import { HttpClientModule } from '@angular/common/http';
-import { ExclusivetoggleComponent } from './searching/exclusivetoggle/exclusivetoggle.component';
+import { ExclusivetoggleComponent } from './searching/searchinput/exclusivetoggle/exclusivetoggle.component';
+import { SearchinputComponent } from './searching/searchinput/searchinput.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +29,8 @@ import { ExclusivetoggleComponent } from './searching/exclusivetoggle/exclusivet
     TaggingComponent,
     SearchingComponent,
     TagqueryComponent,
-    ExclusivetoggleComponent
+    ExclusivetoggleComponent,
+    SearchinputComponent
   ],
   imports: [
     BrowserModule,
@@ -36,7 +40,9 @@ import { ExclusivetoggleComponent } from './searching/exclusivetoggle/exclusivet
     MatIconModule,
     MatButtonModule,
     MatButtonToggleModule,
+    MatCardModule,
     MatDividerModule,
+    MatGridListModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
     MatSidenavModule,

@@ -16,13 +16,32 @@ const excludeModeParam = "excludeMode"
   styleUrls: ['./searching.component.sass']
 })
 export class SearchingComponent implements OnInit {
-  searchBarOpen = false;
-
-  allTags: Tag[] | undefined = undefined
-  searchResult: File[] | undefined = undefined
-
   query: FileQuery = new FileQuery([], [], "all", "all")
+
+  searchResult: File[] | undefined = undefined
   searchSubscription: Subscription | null = null
+
+  sampleURLs: string[] = [
+    "https://starcitizen.tools/images/8/83/Mercury_FrontFiring_Concept.jpeg",
+    "https://sirus.b-cdn.net/wp-content/uploads/2020/11/Mercury_Star_Runner_-_Hero-1024x576.jpg",
+    "https://i0.wp.com/sirusgaming.com/wp-content/uploads/2020/11/Mercury_Star_Runner_1.jpg?fit=1200%2C675&ssl=1",
+    "https://i.redd.it/2xsr8rb3smk11.jpg",
+    "https://i0.wp.com/fullsync.co.uk/wp-content/uploads/2020/11/1-4.jpg?fit=2048%2C1152&ssl=1",
+    "https://dto9r5vaiz7bu.cloudfront.net/9yajn14hfeycr/source.jpg",
+    "https://www.thelonegamers.com/wp-content/uploads/2020/09/6s9m2koxo0p51-scaled.jpg",
+    "https://media.robertsspaceindustries.com/14p4jnd1a8nmx/store_slideshow_large_zoom.jpg",
+    "https://dto9r5vaiz7bu.cloudfront.net/ndpphvnho8q5z/source.jpg",
+    "https://forums.uwsgaming.com/uploads/monthly_2018_08/mercury9.thumb.jpeg.dfcd82431286843e43b6e3d53e243bb8.jpeg",
+    "https://i.redd.it/0kdpdvqrftq41.png"
+  ]
+
+  constructor(public router: Router, private route: ActivatedRoute, private apiServer: APIServerService) { }
+
+  navigateToQuery(query: FileQuery) {
+    this.router.navigate(["/search"], {
+      queryParams: query.searchPageParams(includeTagsParam, includeModeParam, excludeTagsParam, excludeModeParam)
+    })
+  }
 
   private getNumberArrayParam(params: Params, param: string): number[] {
     const val: string = params[param]
@@ -51,7 +70,7 @@ export class SearchingComponent implements OnInit {
     }
   }
 
-  constructor(public router: Router, private route: ActivatedRoute, private apiServer: APIServerService) {
+  ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.query.includeTags = this.getNumberArrayParam(params, includeTagsParam)
       this.query.excludeTags = this.getNumberArrayParam(params, excludeTagsParam)
@@ -66,51 +85,6 @@ export class SearchingComponent implements OnInit {
       this.searchSubscription = this.apiServer.getFiles(this.query).subscribe((files) => {
         this.searchResult = files
       })
-    })
-  }
-
-  navigateToParams(includeTags: number[], excludeTags: number[], includeMode: "any" | "all", excludeMode: "any" | "all") {
-    this.router.navigate(["/search"], {
-      queryParams: new FileQuery(includeTags, excludeTags, includeMode, excludeMode).
-        searchPageParams(includeTagsParam, includeModeParam, excludeTagsParam, excludeModeParam)
-    })
-  }
-
-  // Called when a tag is moved from one category to another
-  tagAction(action: "include" | "exclude" | "neutral", tag: number) {
-    const newInclude = new Set<number>();
-    const newExclude = new Set<number>();
-    switch (action) {
-      case "include":
-        newInclude.add(tag)
-        this.query.includeTags.forEach(t => newInclude.add(t))
-
-        this.query.excludeTags.filter(t => t !== tag).forEach(t => newExclude.add(t))
-        break;
-      case "exclude":
-        newExclude.add(tag)
-        this.query.excludeTags.forEach(t => newExclude.add(t))
-
-        this.query.includeTags.filter(t => t !== tag).forEach(t => newInclude.add(t))
-        break;
-      case "neutral":
-        // Remove from both included and excluded
-        this.query.excludeTags.filter(t => t !== tag).forEach(t => newExclude.add(t))
-        this.query.includeTags.filter(t => t !== tag).forEach(t => newInclude.add(t))
-        break;
-    }
-
-    this.navigateToParams(
-      Array.from(newInclude),
-      Array.from(newExclude),
-      this.query.includeMode,
-      this.query.excludeMode
-    )
-  }
-
-  ngOnInit(): void {
-    this.apiServer.listTags().subscribe(tags => {
-      this.allTags = tags
     })
   }
 }
