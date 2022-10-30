@@ -151,6 +151,14 @@ export class APIServerService {
     }))
   }
 
+  public getFile(fileID: string): Observable<File> {
+    return this.http.get(`${this.apiServerAddress}/files/${fileID}`, this.httpOptions).pipe(map(obj => obj as File))
+  }
+
+  public getFileContentsAddress(fileID: string): string {
+    return `${this.apiServerAddress}/files/contents/${fileID}`
+  }
+
   public getRandomUntaggedFile(): Observable<File | null> {
     return this.getFiles(new FileQuery([], [], "all", "all", false)).pipe(map(untaggedFiles => {
       if (untaggedFiles.length == 0) {

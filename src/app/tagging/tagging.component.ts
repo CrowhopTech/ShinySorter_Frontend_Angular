@@ -11,7 +11,8 @@ export class TaggingComponent implements OnInit {
   selectedTagsParam = "selectedTags"
   orderingIDParam = "orderingID"
 
-  currentImageID: string | undefined = undefined
+  currentFileID: string | undefined = undefined
+  currentFile: File | undefined = undefined
   noMoreFiles: boolean = false
 
   private allQuestions: Question[] | undefined = undefined // undefined means hasn't loaded yet, Question[] means all questions loaded
@@ -75,7 +76,7 @@ export class TaggingComponent implements OnInit {
       return
     }
     // We're on an ID between questions, let's navigate to the next highest one
-    this.router.navigate([`/tag/${this.currentImageID}`], { queryParamsHandling: 'merge', queryParams: { [this.orderingIDParam]: nextQuestion.orderingID } })
+    this.router.navigate([`/tag/${this.currentFileID}`], { queryParamsHandling: 'merge', queryParams: { [this.orderingIDParam]: nextQuestion.orderingID } })
   }
 
   renavigate() {
@@ -107,13 +108,13 @@ export class TaggingComponent implements OnInit {
   }
 
   nextQuestion() {
-    if (!this.allQuestions || !this.currentImageID) {
+    if (!this.allQuestions || !this.currentFileID) {
       return
     }
 
     if (this.orderingID > this.allQuestions[this.allQuestions.length - 1].orderingID) {
       // If we're past the end, let's save this
-      this.apiServer.tagFile(this.currentImageID, this.selectedTags, true).subscribe(_ => this.router.navigate(['/tag']))
+      this.apiServer.tagFile(this.currentFileID, this.selectedTags, true).subscribe(_ => this.router.navigate(['/tag']))
       return
     }
 
@@ -143,7 +144,7 @@ export class TaggingComponent implements OnInit {
       const image = params["image"]
 
       if (image && image != "") {
-        this.currentImageID = image
+        this.currentFileID = image
         return
       }
 

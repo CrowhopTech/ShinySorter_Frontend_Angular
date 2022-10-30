@@ -1,0 +1,7 @@
+<div class="flex flex-col justify-center items-center h-full">
+    <video *ngIf="getFileType() == 'video'" controls loop class="w-full" oncanplay="this.muted = true; this.play();">
+        <source src="{{ apiServer.getFileContentsAddress(fileID) }}" type="video/mp4">
+    </video>
+    <img *ngIf="getFileType() == 'image'" src="{{ apiServer.getFileContentsAddress(fileID) }}" />
+    <h1 *ngIf=" getFileType()=='unknown'">Unknown MIME type {{ file?.mimeType }} for file, can't render!</h1>
+</div>

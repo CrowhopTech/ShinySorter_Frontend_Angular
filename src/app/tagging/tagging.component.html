@@ -1,7 +1,7 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
     <app-toolbar class="flex-0" (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
-    <div class="h-full flex flex-col items-center justify-center" *ngIf="currentImageID === undefined && !noMoreFiles">
+    <div class="h-full flex flex-col items-center justify-center" *ngIf="currentFileID === undefined && !noMoreFiles">
         <mat-spinner class="m-10"></mat-spinner>
         <h1>Getting an image to tag...</h1>
     </div>
@@ -11,7 +11,7 @@
         <h1>No more files to tag!</h1>
         <h2>Check back later when more files have been uploaded</h2>
     </div>
-    <mat-sidenav-container class="flex-grow" *ngIf="currentImageID !== undefined">
+    <mat-sidenav-container class="flex-grow" *ngIf="currentFileID !== undefined">
         <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
             <h1>Questions and tag selection</h1>
             <mat-chip-list *ngIf="selectedTags.length > 0" class="taglist">
@@ -37,7 +37,7 @@
             </div>
         </mat-sidenav>
         <mat-sidenav-content class="p-3">
-            STUFF!
+            <app-fileviewer [fileID]="currentFileID"></app-fileviewer>
         </mat-sidenav-content>
     </mat-sidenav-container>
 </div>
