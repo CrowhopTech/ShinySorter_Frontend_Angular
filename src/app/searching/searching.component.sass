@@ -6,7 +6,19 @@
 
 #image-viewer-root
     background-color: rgba(0, 0, 0, 90%)
-    z-index: 999
+    z-index: 300
+
+    #info-bar
+        background-color: rgba(0, 0, 0, 90%)
+        z-index: 400
+
+        transition: top .4s
+        $info-bar-height: 256px
+        height: $info-bar-height
+        top: -$info-bar-height
+
+        &.viewer-open
+            top: 0
 
     .viewer-button
         color: #ffffff

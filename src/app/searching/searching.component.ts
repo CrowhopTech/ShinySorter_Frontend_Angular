@@ -23,6 +23,7 @@ export class SearchingComponent implements OnInit {
   searchSubscription: Subscription | null = null
 
   viewingFileID: string | undefined = undefined
+  viewerInfoOpen: boolean = false
 
   constructor(public router: Router, private route: ActivatedRoute, public apiServer: APIServerService) { }
 
