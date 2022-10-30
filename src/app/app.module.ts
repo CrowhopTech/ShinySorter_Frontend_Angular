@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -28,6 +28,11 @@ import { SearchinputComponent } from './searching/searchinput/searchinput.compon
 import { QuestionComponent } from './tagging/question/question.component';
 import { FileviewerComponent } from './fileviewer/fileviewer.component';
 import { FileSaverModule } from 'ngx-filesaver';
+import { AppService } from './app.service';
+
+export function initApp(appService: AppService) {
+  return () => appService.load();
+}
 
 @NgModule({
   declarations: [
@@ -62,7 +67,14 @@ import { FileSaverModule } from 'ngx-filesaver';
     HttpClientModule,
     FileSaverModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initApp,
+      deps: [AppService],
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

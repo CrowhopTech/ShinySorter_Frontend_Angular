@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Params } from '@angular/router';
 import { FileSaverService } from 'ngx-filesaver';
 import { map, Observable, of, tap, catchError } from 'rxjs';
+import { AppService } from './app.service';
 
 export class File {
   constructor(public id: string,
@@ -105,21 +106,21 @@ export class APIServerService {
     headers: this.jsonHeader
   }
 
-  constructor(private http: HttpClient, private fileSaver: FileSaverService) { }
+  constructor(private http: HttpClient, private fileSaver: FileSaverService, private appConfig: AppService) { }
 
   responseToObjArray<T>(obs: Observable<Object>) {
     return map((original: Object) => (original as Object[]).map(element => element as T))(obs)
   }
 
   public listTags(): Observable<Tag[]> {
-    return this.http.get(`${this.apiServerAddress}/tags`, this.httpOptions).pipe(
+    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/tags`, this.httpOptions).pipe(
       this.responseToObjArray<Tag>,
       tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.name)))
     )
   }
 
   public getTagsMap(): Observable<Map<number, string>> {
-    return this.http.get(`${this.apiServerAddress}/tags`, this.httpOptions).pipe(
+    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/tags`, this.httpOptions).pipe(
       this.responseToObjArray<Tag>,
       map(tags => {
         let m = new Map<number, string>();
@@ -144,7 +145,7 @@ export class APIServerService {
   }
 
   public getFiles(query: FileQuery): Observable<File[]> {
-    return this.http.get(`${this.apiServerAddress}/files`, { params: query.httpParams(), headers: this.jsonHeader }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
+    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/files`, { params: query.httpParams(), headers: this.jsonHeader }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
       if (err instanceof HttpErrorResponse) {
         return of([] as File[])
       }
@@ -153,11 +154,11 @@ export class APIServerService {
   }
 
   public getFile(fileID: string): Observable<File> {
-    return this.http.get(`${this.apiServerAddress}/files/${fileID}`, this.httpOptions).pipe(map(obj => obj as File))
+    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/files/${fileID}`, this.httpOptions).pipe(map(obj => obj as File))
   }
 
   public getFileContentsAddress(fileID: string): string {
-    return `${this.apiServerAddress}/files/contents/${fileID}`
+    return `${this.appConfig.settings?.apiServerAddress}/files/contents/${fileID}`
   }
 
   public getFileThumbAddress(fileID: string): string {
@@ -189,11 +190,11 @@ export class APIServerService {
     if (typeof (markAsTagged) != 'undefined') {
       requestBody.hasBeenTagged = markAsTagged
     }
-    return this.http.patch(`${this.apiServerAddress}/files/${fileID}`, JSON.stringify(requestBody), this.httpOptions).pipe(map(_ => null)) // Dispose the response for now, unless we need it later
+    return this.http.patch(`${this.appConfig.settings?.apiServerAddress}/files/${fileID}`, JSON.stringify(requestBody), this.httpOptions).pipe(map(_ => null)) // Dispose the response for now, unless we need it later
   }
 
   public listQuestions(): Observable<Question[]> {
-    return this.http.get(`${this.apiServerAddress}/questions`, this.httpOptions).pipe(
+    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/questions`, this.httpOptions).pipe(
       this.responseToObjArray<Question>,
       // If a question has no ordering ID, set to zero
       // Frontend fix for backend issue #22
