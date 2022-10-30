@@ -16,7 +16,7 @@ export class AppService {
     // You can then inject it using a configmap!
     constructor(private http: HttpClient) { }
 
-    configUrl = `${environment.production ? 'envapp/' : ''}assets/app.config.json`;
+    configUrl = `assets/app.config.json`;
     private configSettings: AppConfig | null = null;
 
     public get settings() {

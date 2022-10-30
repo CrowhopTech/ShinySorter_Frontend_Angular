@@ -29,6 +29,7 @@ import { QuestionComponent } from './tagging/question/question.component';
 import { FileviewerComponent } from './fileviewer/fileviewer.component';
 import { FileSaverModule } from 'ngx-filesaver';
 import { AppService } from './app.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 export function initApp(appService: AppService) {
   return () => appService.load();
@@ -73,7 +74,11 @@ export function initApp(appService: AppService) {
       useFactory: initApp,
       deps: [AppService],
       multi: true
-    }
+    },
+    {
+      provide: APP_BASE_HREF,
+      useValue: "/" + (window.location.pathname.split("/")[1] || ""),
+    },
   ],
   bootstrap: [AppComponent]
 })
