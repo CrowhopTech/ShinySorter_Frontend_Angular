@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnInit } from '@angular/core';
 import { APIServerService, File } from '../apiserver.service';
 
@@ -12,10 +13,22 @@ export class FileviewerComponent implements OnInit {
   file: File | null = null
 
   private _fileID: string = "";
+  imageNotFound: boolean = false;
 
   @Input() set fileID(value: string) {
     this._fileID = value
-    this.apiServer.getFile(value).subscribe(file => this.file = file)
+    this.apiServer.getFile(value).subscribe({
+      next: (file: File) => this.file = file,
+      error: (err: any) => {
+        if (!(err instanceof HttpErrorResponse)) {
+          throw err
+        }
+
+        const httpErr = err as HttpErrorResponse
+        this.imageNotFound = (httpErr.status == 404)
+      },
+      complete: () => { }
+    })
   }
 
   get fileID() {

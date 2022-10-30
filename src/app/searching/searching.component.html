@@ -1,7 +1,13 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
+    <div id="image-viewer-root" class="w-full h-full fixed" *ngIf="viewingFileID != undefined">
+        <button mat-icon-button class="viewer-close absolute right-2 top-2" (click)="viewClose()">
+            <mat-icon>close</mat-icon>
+        </button>
+        <app-fileviewer class="w-full h-full text-white" [fileID]="viewingFileID ? viewingFileID : ''"></app-fileviewer>
+    </div>
     <app-toolbar class="flex-0" (onTagClick)="router.navigate(['/tag'])" [currentMode]="'Searching'"></app-toolbar>
-    <mat-sidenav-container class="flex-grow">
+    <mat-sidenav-container class="flex-grow" disableClose>
         <mat-sidenav opened="true" mode="side" class="min-w-fit w-fit p-3">
             <app-searchinput (queryChanged)="navigateToQuery($event)" [query]="query"></app-searchinput>
             <mat-divider></mat-divider>
@@ -13,7 +19,7 @@
             <mat-grid-list *ngIf="searchResult != undefined" cols="4" rowHeight="256">
                 <mat-grid-tile *ngFor="let file of searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"
-                        src="{{ apiServer.getFileThumbAddress(file.id) }}" />
+                        src="{{ apiServer.getFileThumbAddress(file.id) }}" (click)="viewFile(file.id)" />
                 </mat-grid-tile>
             </mat-grid-list>
         </mat-sidenav-content>

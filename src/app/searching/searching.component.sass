@@ -3,3 +3,17 @@
         min-width: 275px
         padding-bottom: 20px
         margin-bottom: 4px
+
+#image-viewer-root
+    background-color: rgba(0, 0, 0, 90%)
+    z-index: 999
+
+    .viewer-close
+        transform: scale(2)
+        color: #ffffff
+
+        transition: all .25s
+        z-index: 500 // Put this above everything else in the viewer
+
+        &:hover
+            transform: scale(1.75)

@@ -2,13 +2,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ParseError } from '@angular/compiler';
 import { Component, EventEmitter, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
+import { distinctUntilChanged, filter, fromEvent, map, Observable, Subscription } from 'rxjs';
 import { APIServerService, FileQuery, SearchMode, Tag, File } from '../apiserver.service';
 
 const includeTagsParam = "includeTags"
 const excludeTagsParam = "excludeTags"
 const includeModeParam = "includeMode"
 const excludeModeParam = "excludeMode"
+const viewingFileParam = "view"
 
 @Component({
   selector: 'app-searching',
@@ -20,6 +21,8 @@ export class SearchingComponent implements OnInit {
 
   searchResult: File[] | undefined = undefined
   searchSubscription: Subscription | null = null
+
+  viewingFileID: string | undefined = undefined
 
   constructor(public router: Router, private route: ActivatedRoute, public apiServer: APIServerService) { }
 
@@ -56,13 +59,45 @@ export class SearchingComponent implements OnInit {
     }
   }
 
+  viewClose() {
+    this.router.navigate(["/search"], {
+      queryParamsHandling: 'merge',
+      queryParams: {
+        [viewingFileParam]: null
+      }
+    })
+  }
+
+  viewFile(fileID: string) {
+    this.router.navigate(["/search"], {
+      queryParamsHandling: 'merge',
+      queryParams: {
+        [viewingFileParam]: fileID
+      }
+    })
+  }
+
   ngOnInit(): void {
+    const keyDowns = fromEvent(document, 'keydown').pipe(
+      map((e: Event) => e as KeyboardEvent),
+      filter((e: KeyboardEvent) => e.type === "keydown"),
+      distinctUntilChanged()
+    );
+    keyDowns.pipe(filter((e: KeyboardEvent) => e.key == "Escape")).subscribe((e: KeyboardEvent) => {
+      if (this.viewingFileID) {
+        this.viewClose()
+      }
+    })
+
     this.route.queryParams.subscribe(params => {
       this.query.includeTags = this.getNumberArrayParam(params, includeTagsParam)
       this.query.excludeTags = this.getNumberArrayParam(params, excludeTagsParam)
 
       this.query.includeMode = this.getSearchModeParam(params, includeModeParam, "all")
       this.query.excludeMode = this.getSearchModeParam(params, excludeModeParam, "all")
+
+      let viewingFile: string = params[viewingFileParam]
+      this.viewingFileID = viewingFile ? viewingFile : undefined
 
       if (this.searchSubscription) {
         this.searchSubscription.unsubscribe()
