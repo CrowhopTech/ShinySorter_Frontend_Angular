@@ -16,7 +16,7 @@ const excludeModeParam = "excludeMode"
   styleUrls: ['./searching.component.sass']
 })
 export class SearchingComponent implements OnInit {
-  query: FileQuery = new FileQuery([], [], "all", "all")
+  query: FileQuery = new FileQuery([], [], "all", "all", true)
 
   searchResult: File[] | undefined = undefined
   searchSubscription: Subscription | null = null

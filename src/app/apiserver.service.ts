@@ -33,11 +33,13 @@ export class FileQuery {
   static excludeTagsParam = "excludeTags"
   static includeModeParam = "includeOperator"
   static excludeModeParam = "excludeOperator"
+  static taggedParam = "hasBeenTagged"
 
   constructor(public includeTags: number[],
     public excludeTags: number[],
     public includeMode: SearchMode,
-    public excludeMode: SearchMode) { }
+    public excludeMode: SearchMode,
+    public hasBeenTagged: boolean) { }
 
   public httpParams(): HttpParams {
     let params = new HttpParams();
@@ -48,6 +50,9 @@ export class FileQuery {
     if (this.excludeTags.length > 0) {
       params = params.set(FileQuery.excludeTagsParam, this.excludeTags.join(","))
       params = params.set(FileQuery.excludeModeParam, this.excludeMode)
+    }
+    if (!this.hasBeenTagged) {
+      params = params.set(FileQuery.taggedParam, this.hasBeenTagged)
     }
 
     return params
@@ -108,6 +113,16 @@ export class APIServerService {
     )
   }
 
+  public getTagsMap(): Observable<Map<number, string>> {
+    return this.http.get(`${this.apiServerAddress}/tags`).pipe(
+      this.responseToObjArray<Tag>,
+      map(tags => {
+        let m = new Map<number, string>();
+        tags.forEach(t => m.set(t.id, t.userFriendlyName))
+        return m
+      }))
+  }
+
   public getTagName(tagID: number): Observable<string> {
     // Check the cache first
     const cachedID = this.tagCache.get(tagID)
@@ -130,5 +145,34 @@ export class APIServerService {
       }
       throw err
     }))
+  }
+
+  public getRandomUntaggedFile(): Observable<File | null> {
+    return this.getFiles(new FileQuery([], [], "all", "all", false)).pipe(map(untaggedFiles => {
+      if (untaggedFiles.length == 0) {
+        return null
+      }
+
+      // Shuffle the files
+      untaggedFiles.sort((a, b) => Math.random() - 0.5);
+      return untaggedFiles[0]
+    }))
+  }
+
+  public listQuestions(): Observable<Question[]> {
+    return this.http.get(`${this.apiServerAddress}/questions`).pipe(
+      this.responseToObjArray<Question>,
+      // If a question has no ordering ID, set to zero
+      // Frontend fix for backend issue #22
+      // https://github.com/CrowhopTech/ShinySorter_Backend/issues/22
+      map(questions => questions.map(q => {
+        if (!q.orderingID) {
+          q.orderingID = 0
+        }
+
+        return q
+      })),
+      map(questions => questions.sort((a, b) => a.orderingID - b.orderingID)) // Sort by ordering ID
+    )
   }
 }

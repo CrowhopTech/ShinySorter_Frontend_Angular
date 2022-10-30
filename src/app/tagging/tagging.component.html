@@ -1,5 +1,35 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
     <app-toolbar class="flex-0" (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
-    Tagging screen!
+    <div class="h-full flex flex-col items-center justify-center" *ngIf="currentImageID === undefined">
+        <mat-spinner class="m-10"></mat-spinner>
+        <h1>Getting an image to tag...</h1>
+    </div>
+    <mat-sidenav-container class="flex-grow" *ngIf="currentImageID !== undefined">
+        <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
+            <h1>Questions and tag selection</h1>
+            <mat-chip-list *ngIf="selectedTags.length > 0" class="taglist">
+                <!-- This is adding a scroll bar at the bottom for some reason no matter what I do...-->
+                <!-- Filed https://github.com/angular/components/issues/25849 for this, fixed in release 15 (coming soon) -->
+                <div *ngFor="let tagID of selectedTags">
+                    <mat-chip *ngIf="tagsMap?.has(tagID)"
+                        [style.background-color]="pastelColorForText(tagsMap?.get(tagID))">
+                        {{tagsMap?.get(tagID)}}</mat-chip>
+                </div>
+            </mat-chip-list>
+            <i *ngIf="selectedTags.length == 0">No tags selected yet</i>
+            <mat-progress-bar value="{{completionPercentage}}" class="py-3"></mat-progress-bar>
+            <mat-divider class="my-3"></mat-divider>
+            <app-question [question]="currentQuestion" (tagAdded)="tagAdded($event)" (tagRemoved)="tagRemoved($event)"
+                [selectedTags]="selectedTags">
+            </app-question>
+            <div class="flex flex-row-reverse">
+                <button mat-raised-button class="mx-1" color="primary" (click)="nextQuestion()">Next Question</button>
+                <button mat-raised-button class="mx-1" color="basic" (click)="prevQuestion()">Back</button>
+            </div>
+        </mat-sidenav>
+        <mat-sidenav-content class="p-3">
+            STUFF!
+        </mat-sidenav-content>
+    </mat-sidenav-container>
 </div>

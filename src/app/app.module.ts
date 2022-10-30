@@ -9,10 +9,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TaggingComponent } from './tagging/tagging.component';
@@ -21,6 +25,7 @@ import { TagqueryComponent } from './searching/searchinput/tagquery/tagquery.com
 import { HttpClientModule } from '@angular/common/http';
 import { ExclusivetoggleComponent } from './searching/searchinput/exclusivetoggle/exclusivetoggle.component';
 import { SearchinputComponent } from './searching/searchinput/searchinput.component';
+import { QuestionComponent } from './tagging/question/question.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +35,8 @@ import { SearchinputComponent } from './searching/searchinput/searchinput.compon
     SearchingComponent,
     TagqueryComponent,
     ExclusivetoggleComponent,
-    SearchinputComponent
+    SearchinputComponent,
+    QuestionComponent
   ],
   imports: [
     BrowserModule,
@@ -41,9 +47,13 @@ import { SearchinputComponent } from './searching/searchinput/searchinput.compon
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
+    MatCheckboxModule,
+    MatChipsModule,
     MatDividerModule,
     MatGridListModule,
+    MatProgressBarModule,
     MatProgressSpinnerModule,
+    MatRadioModule,
     MatSlideToggleModule,
     MatSidenavModule,
     HttpClientModule,

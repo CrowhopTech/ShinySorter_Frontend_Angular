@@ -1,0 +1,15 @@
+<mat-spinner *ngIf="question === undefined" diameter="50"></mat-spinner>
+<div *ngIf="question && question.questionID !== -1">
+    <h1>{{question.questionText}}</h1>
+    <mat-radio-group *ngIf="question.mutuallyExclusive" class="flex flex-col">
+        <mat-radio-button disableRipple class="py-1" *ngFor="let option of question.tagOptions" value="{{option.tagID}}"
+            (change)="radioChanged($event)" [checked]="isTagChecked(option.tagID)">
+            {{option.optionText}}</mat-radio-button>
+    </mat-radio-group>
+    <div *ngIf="!question.mutuallyExclusive" class="flex flex-col">
+        <mat-checkbox disableRipple class="py-1" *ngFor="let option of question.tagOptions" value="{{option.tagID}}"
+            (change)="checkboxChanged(option.tagID)($event)" [checked]="isTagChecked(option.tagID)">
+            {{option.optionText}}</mat-checkbox>
+    </div>
+</div>
+<h1 *ngIf="question === null">No further questions, <i>~*your honor*~</i> uwu</h1>

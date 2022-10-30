@@ -8,7 +8,7 @@ import { APIServerService, FileQuery, SearchMode, Tag } from 'src/app/apiserver.
 })
 export class SearchinputComponent implements OnInit {
 
-  @Input() query = new FileQuery([], [], "all", "all")
+  @Input() query = new FileQuery([], [], "all", "all", true)
 
   @Output() queryChanged = new EventEmitter<FileQuery>();
 
@@ -24,7 +24,7 @@ export class SearchinputComponent implements OnInit {
 
   emitQueryChange(includeTags: number[], excludeTags: number[], includeMode: SearchMode, excludeMode: SearchMode) {
     this.queryChanged.emit(new FileQuery(
-      includeTags, excludeTags, includeMode, excludeMode
+      includeTags, excludeTags, includeMode, excludeMode, true
     ))
   }
 
@@ -56,7 +56,8 @@ export class SearchinputComponent implements OnInit {
       Array.from(newInclude),
       Array.from(newExclude),
       this.query.includeMode,
-      this.query.excludeMode
+      this.query.excludeMode,
+      true
     ))
   }
 }
