@@ -1,7 +1,8 @@
-import { HttpClient, HttpErrorResponse, HttpParams, HttpParamsOptions } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Params } from '@angular/router';
-import { map, Observable, mergeMap, of, filter, tap, Operator, OperatorFunction, MonoTypeOperatorFunction, catchError } from 'rxjs';
+import { FileSaverService } from 'ngx-filesaver';
+import { map, Observable, of, tap, catchError } from 'rxjs';
 
 export class File {
   constructor(public id: string,
@@ -104,7 +105,7 @@ export class APIServerService {
     headers: this.jsonHeader
   }
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private fileSaver: FileSaverService) { }
 
   responseToObjArray<T>(obs: Observable<Object>) {
     return map((original: Object) => (original as Object[]).map(element => element as T))(obs)
@@ -161,6 +162,12 @@ export class APIServerService {
 
   public getFileThumbAddress(fileID: string): string {
     return `${this.getFileContentsAddress(fileID)}?thumb=true`
+  }
+
+  public downloadFileContents(fileID: string) {
+    this.http.get(this.getFileContentsAddress(fileID), { observe: 'response', responseType: 'blob' }).subscribe((res: HttpResponse<Blob>) => {
+      this.fileSaver.save(res.body, fileID)
+    })
   }
 
   public getRandomUntaggedFile(): Observable<File | null> {

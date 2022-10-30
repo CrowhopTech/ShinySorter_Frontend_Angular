@@ -27,10 +27,7 @@ import { ExclusivetoggleComponent } from './searching/searchinput/exclusivetoggl
 import { SearchinputComponent } from './searching/searchinput/searchinput.component';
 import { QuestionComponent } from './tagging/question/question.component';
 import { FileviewerComponent } from './fileviewer/fileviewer.component';
-import { VgCoreModule } from '@videogular/ngx-videogular/core';
-import { VgControlsModule } from '@videogular/ngx-videogular/controls';
-import { VgOverlayPlayModule } from '@videogular/ngx-videogular/overlay-play';
-import { VgBufferingModule } from '@videogular/ngx-videogular/buffering';
+import { FileSaverModule } from 'ngx-filesaver';
 
 @NgModule({
   declarations: [
@@ -63,10 +60,7 @@ import { VgBufferingModule } from '@videogular/ngx-videogular/buffering';
     MatSlideToggleModule,
     MatSidenavModule,
     HttpClientModule,
-    VgCoreModule,
-    VgControlsModule,
-    VgOverlayPlayModule,
-    VgBufferingModule,
+    FileSaverModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
