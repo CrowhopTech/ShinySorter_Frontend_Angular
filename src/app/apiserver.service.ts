@@ -159,6 +159,10 @@ export class APIServerService {
     return `${this.apiServerAddress}/files/contents/${fileID}`
   }
 
+  public getFileThumbAddress(fileID: string): string {
+    return `${this.getFileContentsAddress(fileID)}?thumb=true`
+  }
+
   public getRandomUntaggedFile(): Observable<File | null> {
     return this.getFiles(new FileQuery([], [], "all", "all", false)).pipe(map(untaggedFiles => {
       if (untaggedFiles.length == 0) {
