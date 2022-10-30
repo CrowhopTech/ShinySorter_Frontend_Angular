@@ -1,9 +1,15 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
     <app-toolbar class="flex-0" (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
-    <div class="h-full flex flex-col items-center justify-center" *ngIf="currentImageID === undefined">
+    <div class="h-full flex flex-col items-center justify-center" *ngIf="currentImageID === undefined && !noMoreFiles">
         <mat-spinner class="m-10"></mat-spinner>
         <h1>Getting an image to tag...</h1>
+    </div>
+    <div class="h-full flex flex-col items-center justify-center" *ngIf="noMoreFiles">
+        <mat-icon class="complete-icon">check_circle</mat-icon>
+        <div class="h-24"></div>
+        <h1>No more files to tag!</h1>
+        <h2>Check back later when more files have been uploaded</h2>
     </div>
     <mat-sidenav-container class="flex-grow" *ngIf="currentImageID !== undefined">
         <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
@@ -24,7 +30,9 @@
                 [selectedTags]="selectedTags">
             </app-question>
             <div class="flex flex-row-reverse">
-                <button mat-raised-button class="mx-1" color="primary" (click)="nextQuestion()">Next Question</button>
+                <button mat-raised-button class="mx-1" color="primary" (click)="nextQuestion()">
+                    {{completionPercentage == 100 ? "Submit" : "Next Question"}}
+                </button>
                 <button mat-raised-button class="mx-1" color="basic" (click)="prevQuestion()">Back</button>
             </div>
         </mat-sidenav>

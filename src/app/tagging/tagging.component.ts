@@ -103,12 +103,17 @@ export class TaggingComponent implements OnInit {
       return
     }
     this.selectedTags.splice(idx, 1)
-    console.log("After removing tag: ", this.selectedTags)
     this.renavigate()
   }
 
   nextQuestion() {
-    if (!this.allQuestions) {
+    if (!this.allQuestions || !this.currentImageID) {
+      return
+    }
+
+    if (this.orderingID > this.allQuestions[this.allQuestions.length - 1].orderingID) {
+      // If we're past the end, let's save this
+      this.apiServer.tagFile(this.currentImageID, this.selectedTags, true).subscribe(_ => this.router.navigate(['/tag']))
       return
     }
 

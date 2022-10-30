@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams, HttpParamsOptions } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Params } from '@angular/router';
 import { map, Observable, mergeMap, of, filter, tap, Operator, OperatorFunction, MonoTypeOperatorFunction, catchError } from 'rxjs';
@@ -96,8 +96,12 @@ export class APIServerService {
   apiServerAddress = "http://192.168.1.5/dev/api"
   tagCache: Map<number, string> = new Map();
 
-  httpOptions = {
+  jsonHeader = {
     'Content-Type': 'application/json'
+  }
+
+  httpOptions = {
+    headers: this.jsonHeader
   }
 
   constructor(private http: HttpClient) { }
@@ -107,14 +111,14 @@ export class APIServerService {
   }
 
   public listTags(): Observable<Tag[]> {
-    return this.http.get(`${this.apiServerAddress}/tags`).pipe(
+    return this.http.get(`${this.apiServerAddress}/tags`, this.httpOptions).pipe(
       this.responseToObjArray<Tag>,
       tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.name)))
     )
   }
 
   public getTagsMap(): Observable<Map<number, string>> {
-    return this.http.get(`${this.apiServerAddress}/tags`).pipe(
+    return this.http.get(`${this.apiServerAddress}/tags`, this.httpOptions).pipe(
       this.responseToObjArray<Tag>,
       map(tags => {
         let m = new Map<number, string>();
@@ -139,7 +143,7 @@ export class APIServerService {
   }
 
   public getFiles(query: FileQuery): Observable<File[]> {
-    return this.http.get(`${this.apiServerAddress}/files`, { params: query.httpParams() }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
+    return this.http.get(`${this.apiServerAddress}/files`, { params: query.httpParams(), headers: this.jsonHeader }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
       if (err instanceof HttpErrorResponse) {
         return of([] as File[])
       }
@@ -159,8 +163,18 @@ export class APIServerService {
     }))
   }
 
+  public tagFile(fileID: string, tags: number[], markAsTagged: boolean | undefined = undefined): Observable<null> {
+    const requestBody: any = {
+      "tags": tags,
+    }
+    if (typeof (markAsTagged) != 'undefined') {
+      requestBody.hasBeenTagged = markAsTagged
+    }
+    return this.http.patch(`${this.apiServerAddress}/files/${fileID}`, JSON.stringify(requestBody), this.httpOptions).pipe(map(_ => null)) // Dispose the response for now, unless we need it later
+  }
+
   public listQuestions(): Observable<Question[]> {
-    return this.http.get(`${this.apiServerAddress}/questions`).pipe(
+    return this.http.get(`${this.apiServerAddress}/questions`, this.httpOptions).pipe(
       this.responseToObjArray<Question>,
       // If a question has no ordering ID, set to zero
       // Frontend fix for backend issue #22

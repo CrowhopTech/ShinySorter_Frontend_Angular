@@ -12,4 +12,10 @@
             {{option.optionText}}</mat-checkbox>
     </div>
 </div>
-<h1 *ngIf="question === null">No further questions, <i>~*your honor*~</i> uwu</h1>
+<div *ngIf="question === null" class="flex flex-col">
+    <div class="my-36 flex justify-center">
+        <mat-icon class="complete-icon">check_circle</mat-icon>
+    </div>
+    <h1>All questions answered!</h1>
+    <h2>Review the tags and submit, or go back and change your answers</h2>
+</div>
