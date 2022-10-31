@@ -21,6 +21,7 @@ export class SearchingComponent implements OnInit {
 
   searchResult: File[] | undefined = undefined
   searchSubscription: Subscription | null = null
+  searchError: string | undefined = undefined
 
   viewingFileID: string | undefined = undefined
   viewerInfoOpen: boolean = false
@@ -104,8 +105,20 @@ export class SearchingComponent implements OnInit {
         this.searchSubscription.unsubscribe()
       }
       this.searchResult = undefined
-      this.searchSubscription = this.apiServer.getFiles(this.query).subscribe((files) => {
-        this.searchResult = files
+      this.searchError = undefined
+      this.searchSubscription = this.apiServer.getFiles(this.query).subscribe({
+        next: (files: File[]) => {
+          this.searchResult = files
+          this.searchError = undefined
+        },
+        error: (err: any) => {
+          this.searchResult = []
+          if (err instanceof HttpErrorResponse) {
+            this.searchError = err.message
+          } else {
+            this.searchError = err.toString()
+          }
+        }
       })
     })
   }

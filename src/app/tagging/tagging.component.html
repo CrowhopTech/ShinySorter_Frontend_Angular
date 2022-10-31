@@ -2,8 +2,9 @@
 <div class="h-full flex flex-col">
     <app-toolbar class="flex-0" (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
     <div class="h-full flex flex-col items-center justify-center" *ngIf="currentFileID === undefined && !noMoreFiles">
-        <mat-spinner class="m-10"></mat-spinner>
-        <h1>Getting an image to tag...</h1>
+        <mat-spinner class="m-10" *ngIf="navigateError === undefined"></mat-spinner>
+        <h1 *ngIf="navigateError === undefined">Getting an image to tag...</h1>
+        <h1 *ngIf="navigateError !== undefined">Failed to get a new image to tag: <code>{{ navigateError }}</code></h1>
     </div>
     <div class="h-full flex flex-col items-center justify-center" *ngIf="noMoreFiles">
         <mat-icon class="complete-icon">check_circle</mat-icon>
@@ -14,7 +15,8 @@
     <mat-sidenav-container class="flex-grow" *ngIf="currentFileID !== undefined">
         <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
             <h1>Questions and tag selection</h1>
-            <mat-chip-list *ngIf="selectedTags.length > 0" class="taglist">
+            <h3 *ngIf="tagsMapErr !== undefined">Failed to get tags: <code>{{ tagsMapErr }}</code></h3>
+            <mat-chip-list *ngIf="tagsMapErr === undefined && selectedTags.length > 0" class="taglist">
                 <!-- This is adding a scroll bar at the bottom for some reason no matter what I do...-->
                 <!-- Filed https://github.com/angular/components/issues/25849 for this, fixed in release 15 (coming soon) -->
                 <div *ngFor="let tagID of selectedTags">
@@ -26,8 +28,9 @@
             <i *ngIf="selectedTags.length == 0">No tags selected yet</i>
             <mat-progress-bar value="{{completionPercentage}}" class="py-3"></mat-progress-bar>
             <mat-divider class="my-3"></mat-divider>
-            <app-question [question]="currentQuestion" (tagAdded)="tagAdded($event)" (tagRemoved)="tagRemoved($event)"
-                [selectedTags]="selectedTags">
+            <h1 *ngIf="questionsError !== undefined">Failed to get questions: <code>{{ questionsError }}</code></h1>
+            <app-question *ngIf="questionsError === undefined" [question]="currentQuestion"
+                (tagAdded)="tagAdded($event)" (tagRemoved)="tagRemoved($event)" [selectedTags]="selectedTags">
             </app-question>
             <div class="flex flex-row-reverse">
                 <button mat-raised-button class="mx-1" color="primary" (click)="nextQuestion()">

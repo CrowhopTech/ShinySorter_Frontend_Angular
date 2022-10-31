@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { APIServerService, FileQuery, SearchMode, Tag } from 'src/app/apiserver.service';
 
@@ -13,12 +14,23 @@ export class SearchinputComponent implements OnInit {
   @Output() queryChanged = new EventEmitter<FileQuery>();
 
   allTags: Tag[] | undefined = undefined
+  tagsErr: string | undefined = undefined
 
   constructor(private apiServer: APIServerService) { }
 
   ngOnInit(): void {
-    this.apiServer.listTags().subscribe(tags => {
-      this.allTags = tags
+    this.apiServer.listTags().subscribe({
+      next: tags => {
+        this.allTags = tags
+      },
+      error: (err: any) => {
+        this.allTags = []
+        if (err instanceof HttpErrorResponse) {
+          this.tagsErr = err.message
+        } else {
+          this.tagsErr = err.toString()
+        }
+      }
     })
   }
 

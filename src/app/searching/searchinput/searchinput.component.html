@@ -1,5 +1,7 @@
-<h1 *ngIf="allTags && allTags.length == 0">No tags present! Talk to your sysadmin</h1>
-<div class="spacer"></div>
+<div class="spacer">
+    <h1 *ngIf="tagsErr === undefined && allTags && allTags.length == 0">No tags present! Talk to your sysadmin</h1>
+    <h1 *ngIf="tagsErr !== undefined">Failed to get tags: <code>{{ tagsErr }}</code></h1>
+</div>
 <div class="tags-cols flex flex-row pb-1.5" *ngIf="allTags && allTags.length > 0">
     <div class="tag-col px-3 flex-grow">
         <ul>

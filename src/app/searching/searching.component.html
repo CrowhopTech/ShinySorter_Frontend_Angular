@@ -30,7 +30,12 @@
         <mat-sidenav-content class="p-3">
             <h1>Results</h1>
             <mat-spinner *ngIf="searchResult === undefined" diameter="50"></mat-spinner>
-            <h2 *ngIf="searchResult !== undefined && searchResult.length == 0">No results</h2>
+            <h2 *ngIf="searchError === undefined && searchResult !== undefined && searchResult.length == 0">
+                No results
+            </h2>
+            <h2 *ngIf="searchError !== undefined">
+                Failed to get results: <code>{{ searchError }}</code>
+            </h2>
             <mat-grid-list *ngIf="searchResult != undefined" cols="4" rowHeight="256">
                 <mat-grid-tile *ngFor="let file of searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"

@@ -11,6 +11,7 @@ export type FileType = "image" | "video" | "unknown"
 })
 export class FileviewerComponent implements OnInit {
   file: File | null = null
+  fileError: string | undefined = undefined
 
   private _fileID: string = "";
   imageNotFound: boolean = false;
@@ -20,14 +21,17 @@ export class FileviewerComponent implements OnInit {
     this.apiServer.getFile(value).subscribe({
       next: (file: File) => this.file = file,
       error: (err: any) => {
-        if (!(err instanceof HttpErrorResponse)) {
-          throw err
+        this.imageNotFound = false
+        if (err instanceof HttpErrorResponse) {
+          if (err.status == 404) {
+            this.imageNotFound = true
+            return
+          }
+          this.fileError = err.message
+        } else {
+          this.fileError = err.toString()
         }
-
-        const httpErr = err as HttpErrorResponse
-        this.imageNotFound = (httpErr.status == 404)
-      },
-      complete: () => { }
+      }
     })
   }
 

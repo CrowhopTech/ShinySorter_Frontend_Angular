@@ -147,7 +147,10 @@ export class APIServerService {
   public getFiles(query: FileQuery): Observable<File[]> {
     return this.http.get(`${this.appConfig.settings?.apiServerAddress}/files`, { params: query.httpParams(), headers: this.jsonHeader }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
       if (err instanceof HttpErrorResponse) {
-        return of([] as File[])
+        const cast = err as HttpErrorResponse
+        if (cast.status == 404) {
+          return of([] as File[])
+        }
       }
       throw err
     }))

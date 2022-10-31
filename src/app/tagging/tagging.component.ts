@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { APIServerService, FileQuery, Question } from '../apiserver.service';
@@ -14,8 +15,10 @@ export class TaggingComponent implements OnInit {
   currentFileID: string | undefined = undefined
   currentFile: File | undefined = undefined
   noMoreFiles: boolean = false
+  navigateError: string | undefined = undefined
 
   private allQuestions: Question[] | undefined = undefined // undefined means hasn't loaded yet, Question[] means all questions loaded
+  questionsError: string | undefined = undefined
   currentQuestion: Question | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
   private orderingID: number = -1
 
@@ -23,6 +26,7 @@ export class TaggingComponent implements OnInit {
 
   selectedTags: number[] = []
   tagsMap?: Map<number, string> = undefined // Stores the map of tag ID to tag text
+  tagsMapErr: string | undefined = undefined
 
   constructor(public router: Router, private route: ActivatedRoute, public apiServer: APIServerService) { }
 
@@ -114,6 +118,7 @@ export class TaggingComponent implements OnInit {
 
     if (this.orderingID > this.allQuestions[this.allQuestions.length - 1].orderingID) {
       // If we're past the end, let's save this
+      // TODO: gracefully handle errors on tagging!
       this.apiServer.tagFile(this.currentFileID, this.selectedTags, true).subscribe(_ => this.router.navigate(['/tag']))
       return
     }
@@ -148,13 +153,24 @@ export class TaggingComponent implements OnInit {
         return
       }
 
-      this.apiServer.getRandomUntaggedFile().subscribe(untaggedFile => {
-        if (untaggedFile === null) {
-          this.noMoreFiles = true
-          return
-        }
+      this.apiServer.getRandomUntaggedFile().subscribe({
+        next: untaggedFile => {
+          this.navigateError = undefined
+          if (untaggedFile === null) {
+            this.noMoreFiles = true
+            return
+          }
 
-        this.router.navigate([`/tag/${untaggedFile.id}`], { queryParamsHandling: 'preserve' })
+          this.router.navigate([`/tag/${untaggedFile.id}`], { queryParamsHandling: 'preserve' })
+        },
+        error: (err: any) => {
+          this.currentFileID = undefined
+          if (err instanceof HttpErrorResponse) {
+            this.navigateError = err.message
+          } else {
+            this.navigateError = err.toString()
+          }
+        }
       })
     })
 
@@ -171,12 +187,32 @@ export class TaggingComponent implements OnInit {
       this.establishQuestion()
     })
 
-    this.apiServer.listQuestions().subscribe(questions => {
-      this.allQuestions = questions
+    this.apiServer.listQuestions().subscribe({
+      next: questions => {
+        this.allQuestions = questions
 
-      this.establishQuestion()
+        this.establishQuestion()
+      },
+      error: (err: any) => {
+        this.allQuestions = undefined
+        if (err instanceof HttpErrorResponse) {
+          this.questionsError = err.message
+        } else {
+          this.questionsError = err.toString()
+        }
+      }
     })
 
-    this.apiServer.getTagsMap().subscribe(tagsMap => this.tagsMap = tagsMap)
+    this.apiServer.getTagsMap().subscribe({
+      next: tagsMap => this.tagsMap = tagsMap,
+      error: (err: any) => {
+        this.tagsMap = undefined
+        if (err instanceof HttpErrorResponse) {
+          this.tagsMapErr = err.message
+        } else {
+          this.tagsMapErr = err.toString()
+        }
+      }
+    })
   }
 }
