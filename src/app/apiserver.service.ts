@@ -88,6 +88,21 @@ export class FileQuery {
     if (!allTags) return []
     return allTags.filter(tag => (!this.includeTags.find(id => tag.id === id) && !this.excludeTags.find(id => tag.id === id)))
   }
+
+  public equals(other: FileQuery): boolean {
+    if (!other) {
+      return false
+    }
+
+    if (this.includeMode != other.includeMode ||
+      this.excludeMode != other.excludeMode ||
+      this.includeTags != other.includeTags ||
+      this.excludeTags != other.excludeTags ||
+      this.hasBeenTagged != other.hasBeenTagged) {
+      return false
+    }
+    return true
+  }
 }
 
 @Injectable({
@@ -115,33 +130,22 @@ export class APIServerService {
   public listTags(): Observable<Tag[]> {
     return this.http.get(`${this.appConfig.settings?.apiServerAddress}/tags`, this.httpOptions).pipe(
       this.responseToObjArray<Tag>,
-      tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.name)))
+      tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.userFriendlyName)))
     )
   }
 
-  public getTagsMap(): Observable<Map<number, string>> {
-    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/tags`, this.httpOptions).pipe(
-      this.responseToObjArray<Tag>,
-      map(tags => {
-        let m = new Map<number, string>();
-        tags.forEach(t => m.set(t.id, t.userFriendlyName))
-        return m
-      }))
+  public prepareTagsMap(): Observable<undefined> {
+    return this.listTags().pipe(map(_ => undefined))
   }
 
-  public getTagName(tagID: number): Observable<string> {
+  public getTagName(tagID: number): string {
     // Check the cache first
     const cachedID = this.tagCache.get(tagID)
     if (cachedID) {
-      return of(cachedID)
+      return cachedID
     }
 
-    // If not in cache, do the long way and list tags to find the name
-    return this.listTags().
-      pipe(
-        map(tags => tags.filter(t => t.id === tagID)),
-        map(tags => tags[0].name)
-      )
+    return ""
   }
 
   public getFiles(query: FileQuery): Observable<File[]> {

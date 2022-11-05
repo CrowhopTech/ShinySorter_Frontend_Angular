@@ -1,7 +1,8 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
-    <div id="image-viewer-root" class="w-full h-full fixed" *ngIf="viewingFileID != undefined">
-        <button mat-icon-button disableRipple class="viewer-button absolute right-2 top-2" (click)="viewClose()">
+    <div id="image-viewer-root" class="w-full h-full fixed" *ngIf="queryManager.viewingFileID != ''">
+        <button mat-icon-button disableRipple class="viewer-button absolute right-2 top-2"
+            (click)="queryManager.viewClose()">
             <mat-icon>close</mat-icon>
         </button>
         <button mat-icon-button disableRipple class="viewer-button absolute left-2 top-2"
@@ -9,46 +10,50 @@
             <mat-icon color="{{ viewerInfoOpen ? 'accent' : '' }}">info</mat-icon>
         </button>
         <button mat-icon-button disableRipple class="viewer-button absolute left-16 top-2"
-            (click)="apiServer.downloadFileContents(viewingFileID)">
+            (click)="apiServer.downloadFileContents(queryManager.viewingFileID)">
             <mat-icon>download</mat-icon>
         </button>
         <div id="info-bar" [class.viewer-open]="viewerInfoOpen" class="fixed w-full text-white">
             <div class="relative left-28 p-3 flex flex-col">
-                <h1>{{ viewingFileID }}</h1>
-                <div *ngIf="viewingFile != undefined">
-                    <h3 *ngIf="tagsMapErr !== undefined">Failed to get tags: <code>{{ tagsMapErr }}</code></h3>
-                    <mat-chip-list *ngIf="tagsMapErr === undefined && viewingFile.tags.length > 0" class="taglist">
-                        <div *ngFor="let tagID of viewingFile.tags">
-                            <mat-chip *ngIf="tagsMap?.has(tagID)"
-                                [style.background-color]="pastelColorForText(tagsMap?.get(tagID))">
-                                {{tagsMap?.get(tagID)}}</mat-chip>
+                <h1>{{ queryManager.viewingFileID }}</h1>
+                <div *ngIf="queryManager.viewingFile != undefined">
+                    <h3 *ngIf="tagsFetchError !== undefined">Failed to get tags: <code>{{ tagsFetchError }}</code></h3>
+                    <mat-chip-list
+                        *ngIf="tagsFetchError === undefined && queryManager.viewingFile != undefined && queryManager.viewingFile.tags.length > 0"
+                        class="taglist">
+                        <div *ngFor="let tagID of queryManager.viewingFile.tags">
+                            <mat-chip *ngIf="apiServer.getTagName(tagID) != ''"
+                                [style.background-color]="pastelColorForText(apiServer.getTagName(tagID))">
+                                {{apiServer.getTagName(tagID)}}</mat-chip>
                         </div>
                     </mat-chip-list>
                 </div>
             </div>
         </div>
-        <app-fileviewer class="w-full h-full text-white" [fileID]="viewingFileID ? viewingFileID : ''">
+        <app-fileviewer class="w-full h-full text-white" [fileID]="queryManager.viewingFileID">
         </app-fileviewer>
     </div>
-    <app-toolbar class="flex-0" (onTagClick)="router.navigate(['/tag'])" [currentMode]="'Searching'"></app-toolbar>
+    <app-toolbar class="flex-0" (onTagClick)="queryManager.nextRandomFile()" [currentMode]="'Searching'"></app-toolbar>
     <mat-sidenav-container class="flex-grow" disableClose>
         <mat-sidenav opened="true" mode="side" class="min-w-fit w-fit p-3">
-            <app-searchinput (queryChanged)="navigateToQuery($event)" [query]="query"></app-searchinput>
+            <app-searchinput (queryChanged)="this.queryManager.navigateToQuery($event)" [query]="queryManager.query">
+            </app-searchinput>
             <mat-divider></mat-divider>
         </mat-sidenav>
         <mat-sidenav-content class="p-3">
             <h1>Results</h1>
-            <mat-spinner *ngIf="searchResult === undefined" diameter="50"></mat-spinner>
-            <h2 *ngIf="searchError === undefined && searchResult !== undefined && searchResult.length == 0">
+            <mat-spinner *ngIf="queryManager.searchResult === undefined" diameter="50"></mat-spinner>
+            <h2
+                *ngIf="queryManager.searchError === undefined && queryManager.searchResult !== undefined && queryManager.searchResult.length == 0">
                 No results
             </h2>
-            <h2 *ngIf="searchError !== undefined">
-                Failed to get results: <code>{{ searchError }}</code>
+            <h2 *ngIf="queryManager.searchError !== undefined">
+                Failed to get results: <code>{{ queryManager.searchError }}</code>
             </h2>
-            <mat-grid-list *ngIf="searchResult != undefined" cols="4" rowHeight="256">
-                <mat-grid-tile *ngFor="let file of searchResult">
+            <mat-grid-list *ngIf="queryManager.searchResult != undefined" cols="4" rowHeight="256">
+                <mat-grid-tile *ngFor="let file of queryManager.searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"
-                        [src]="apiServer.getFileThumbAddress(file.id)" (click)="viewFile(file.id)" />
+                        [src]="apiServer.getFileThumbAddress(file.id)" (click)="queryManager.viewFile(file.id)" />
                 </mat-grid-tile>
             </mat-grid-list>
         </mat-sidenav-content>

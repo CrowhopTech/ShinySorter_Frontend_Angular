@@ -25,8 +25,8 @@ export class TaggingComponent implements OnInit {
   completionPercentage: number | undefined // undefined means hasn't loaded yet, number means we have percentage (out of 100)
 
   selectedTags: number[] = []
-  tagsMap?: Map<number, string> = undefined // Stores the map of tag ID to tag text
-  tagsMapErr: string | undefined = undefined
+
+  tagsFetchError: string | undefined = undefined
 
   constructor(public router: Router, private route: ActivatedRoute, public apiServer: APIServerService) { }
 
@@ -214,16 +214,9 @@ export class TaggingComponent implements OnInit {
       }
     })
 
-    this.apiServer.getTagsMap().subscribe({
-      next: tagsMap => this.tagsMap = tagsMap,
-      error: (err: any) => {
-        this.tagsMap = undefined
-        if (err instanceof HttpErrorResponse) {
-          this.tagsMapErr = err.message
-        } else {
-          this.tagsMapErr = err.toString()
-        }
-      }
+    this.apiServer.prepareTagsMap().subscribe({
+      next: _ => { this.tagsFetchError = undefined },
+      error: err => { this.tagsFetchError = err.toString() }
     })
   }
 }

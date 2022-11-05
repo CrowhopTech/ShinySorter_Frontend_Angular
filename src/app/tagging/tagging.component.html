@@ -15,14 +15,14 @@
     <mat-sidenav-container class="flex-grow" *ngIf="currentFileID !== undefined">
         <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
             <h1>Questions and tag selection</h1>
-            <h3 *ngIf="tagsMapErr !== undefined">Failed to get tags: <code>{{ tagsMapErr }}</code></h3>
-            <mat-chip-list *ngIf="tagsMapErr === undefined && selectedTags.length > 0" class="taglist">
+            <h3 *ngIf="tagsFetchError !== undefined">Failed to get tags: <code>{{ tagsFetchError }}</code></h3>
+            <mat-chip-list *ngIf="tagsFetchError === undefined && selectedTags.length > 0" class="taglist">
                 <!-- This is adding a scroll bar at the bottom for some reason no matter what I do...-->
                 <!-- Filed https://github.com/angular/components/issues/25849 for this, fixed in release 15 (coming soon) -->
                 <div *ngFor="let tagID of selectedTags">
-                    <mat-chip *ngIf="tagsMap?.has(tagID)"
-                        [style.background-color]="pastelColorForText(tagsMap?.get(tagID))">
-                        {{tagsMap?.get(tagID)}}</mat-chip>
+                    <mat-chip *ngIf="apiServer.getTagName(tagID) != ''"
+                        [style.background-color]="pastelColorForText(apiServer.getTagName(tagID))">
+                        {{apiServer.getTagName(tagID)}}</mat-chip>
                 </div>
             </mat-chip-list>
             <i *ngIf="selectedTags.length == 0">No tags selected yet</i>
