@@ -20,8 +20,22 @@ export class QuestionComponent implements OnInit {
 
   constructor() { }
 
-  isTagChecked(tagID: number): boolean {
+  tagIsSelected(tagID: number): boolean {
     return this.selectedTags.some(t => t == tagID)
+  }
+
+  isTagChecked(tagID: number): boolean {
+    if (!this.question) {
+      return false
+    }
+
+    if (tagID == -1) {
+      // Check that none of the tag options in the question are in our selected list
+      // O(N^2) but small data size
+      return this.question.tagOptions.every(to => !this.tagIsSelected(to.tagID))
+    }
+
+    return this.tagIsSelected(tagID)
   }
 
   radioChanged(event: MatRadioChange): void {

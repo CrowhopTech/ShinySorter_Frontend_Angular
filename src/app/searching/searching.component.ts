@@ -1,6 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ParseError } from '@angular/compiler';
-import { Component, EventEmitter, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { distinctUntilChanged, filter, fromEvent, map, Observable, Subscription } from 'rxjs';
 import { APIServerService, FileQuery, SearchMode, Tag, File } from '../apiserver.service';
@@ -24,7 +23,11 @@ export class SearchingComponent implements OnInit {
   searchError: string | undefined = undefined
 
   viewingFileID: string | undefined = undefined
+  viewingFile: File | undefined = undefined
   viewerInfoOpen: boolean = false
+
+  tagsMap?: Map<number, string> = undefined // Stores the map of tag ID to tag text
+  tagsMapErr: string | undefined = undefined
 
   constructor(public router: Router, private route: ActivatedRoute, public apiServer: APIServerService) { }
 
@@ -79,6 +82,18 @@ export class SearchingComponent implements OnInit {
     })
   }
 
+  pastelColorForText(text: string | undefined): string {
+    if (!text) {
+      return ""
+    }
+    const hash = text.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    const pastelStrength = '93%'
+    return `hsl(${hash % 360}, ${pastelStrength}, ${pastelStrength})`;
+  }
+
   ngOnInit(): void {
     const keyDowns = fromEvent(document, 'keydown').pipe(
       map((e: Event) => e as KeyboardEvent),
@@ -98,8 +113,13 @@ export class SearchingComponent implements OnInit {
       this.query.includeMode = this.getSearchModeParam(params, includeModeParam, "all")
       this.query.excludeMode = this.getSearchModeParam(params, excludeModeParam, "all")
 
+      this.query.hasBeenTagged = true
+
       let viewingFile: string = params[viewingFileParam]
       this.viewingFileID = viewingFile ? viewingFile : undefined
+      if (this.viewingFileID) {
+        this.apiServer.getFile(this.viewingFileID).subscribe(f => this.viewingFile = f)
+      }
 
       if (this.searchSubscription) {
         this.searchSubscription.unsubscribe()
@@ -120,6 +140,18 @@ export class SearchingComponent implements OnInit {
           }
         }
       })
+    })
+
+    this.apiServer.getTagsMap().subscribe({
+      next: tagsMap => this.tagsMap = tagsMap,
+      error: (err: any) => {
+        this.tagsMap = undefined
+        if (err instanceof HttpErrorResponse) {
+          this.tagsMapErr = err.message
+        } else {
+          this.tagsMapErr = err.toString()
+        }
+      }
     })
   }
 }

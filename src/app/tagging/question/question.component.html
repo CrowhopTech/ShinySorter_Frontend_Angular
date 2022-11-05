@@ -2,7 +2,10 @@
 <div *ngIf="question && question.questionID !== -1">
     <h1>{{question.questionText}}</h1>
     <mat-radio-group *ngIf="question.mutuallyExclusive" class="flex flex-col">
-        <mat-radio-button disableRipple class="py-1" *ngFor="let option of question.tagOptions" value="{{option.tagID}}"
+        <mat-radio-button disableRipple class="py-1" value="-1" (change)="radioChanged($event)"
+            [checked]="isTagChecked(-1)">
+            (none)</mat-radio-button>
+        <mat-radio-button *ngFor="let option of question.tagOptions" disableRipple class="py-1" value="{{option.tagID}}"
             (change)="radioChanged($event)" [checked]="isTagChecked(option.tagID)">
             {{option.optionText}}</mat-radio-button>
     </mat-radio-group>

@@ -15,7 +15,16 @@
         <div id="info-bar" [class.viewer-open]="viewerInfoOpen" class="fixed w-full text-white">
             <div class="relative left-28 p-3 flex flex-col">
                 <h1>{{ viewingFileID }}</h1>
-                <h2>TODO: add more info here, like tags and stuff!</h2>
+                <div *ngIf="viewingFile != undefined">
+                    <h3 *ngIf="tagsMapErr !== undefined">Failed to get tags: <code>{{ tagsMapErr }}</code></h3>
+                    <mat-chip-list *ngIf="tagsMapErr === undefined && viewingFile.tags.length > 0" class="taglist">
+                        <div *ngFor="let tagID of viewingFile.tags">
+                            <mat-chip *ngIf="tagsMap?.has(tagID)"
+                                [style.background-color]="pastelColorForText(tagsMap?.get(tagID))">
+                                {{tagsMap?.get(tagID)}}</mat-chip>
+                        </div>
+                    </mat-chip-list>
+                </div>
             </div>
         </div>
         <app-fileviewer class="w-full h-full text-white" [fileID]="viewingFileID ? viewingFileID : ''">

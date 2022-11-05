@@ -48,6 +48,9 @@ export class TaggingComponent implements OnInit {
       case 'undefined':
         return []
       case 'string':
+        if (val.length == 0) {
+          return []
+        }
         const split = val.split(",")
         return split.map(v => parseInt(v))
       case 'object':
@@ -144,7 +147,15 @@ export class TaggingComponent implements OnInit {
     this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { [this.orderingIDParam]: allLowerQuestions[allLowerQuestions.length - 1].orderingID } })
   }
 
+  skipImage() {
+    // TODO: fix this better so we don't have a chance to redirect to the same image again
+    //       Maybe add a "not" flag, so we go to any image except that one?
+    this.router.navigate(["/tag"])
+  }
+
   ngOnInit(): void {
+
+
     this.route.params.subscribe(params => {
       const image = params["image"]
 
