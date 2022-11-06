@@ -14,7 +14,7 @@ export class SearchingComponent implements OnInit {
 
   tagsFetchError: string | undefined = undefined
 
-  constructor(public apiServer: APIServerService, public queryManager: QueryManagerService) { }
+  constructor(public router: Router, public apiServer: APIServerService, public queryManager: QueryManagerService) { }
 
   pastelColorForText(text: string | undefined): string {
     if (!text) {

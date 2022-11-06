@@ -1,7 +1,8 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
     <app-toolbar class="flex-0" (onSearchClick)="router.navigate(['/search'])" [currentMode]="'Tagging'"></app-toolbar>
-    <div class="h-full flex flex-col items-center justify-center" *ngIf="currentFileID === undefined && !noMoreFiles">
+    <div class="h-full flex flex-col items-center justify-center"
+        *ngIf="questionManager.currentFileID === undefined && !noMoreFiles">
         <mat-spinner class="m-10" *ngIf="navigateError === undefined"></mat-spinner>
         <h1 *ngIf="navigateError === undefined">Getting an image to tag...</h1>
         <h1 *ngIf="navigateError !== undefined">Failed to get a new image to tag: <code>{{ navigateError }}</code></h1>
@@ -12,29 +13,33 @@
         <h1>No more files to tag!</h1>
         <h2>Check back later when more files have been uploaded</h2>
     </div>
-    <mat-sidenav-container class="flex-grow" *ngIf="currentFileID !== undefined">
+    <mat-sidenav-container class="flex-grow" *ngIf="questionManager.currentFileID !== undefined">
         <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
             <h1>Questions and tag selection</h1>
             <h3 *ngIf="tagsFetchError !== undefined">Failed to get tags: <code>{{ tagsFetchError }}</code></h3>
-            <mat-chip-list *ngIf="tagsFetchError === undefined && selectedTags.length > 0" class="taglist">
+            <mat-chip-list *ngIf="tagsFetchError === undefined && questionManager.selectedTags.length > 0"
+                class="taglist">
                 <!-- This is adding a scroll bar at the bottom for some reason no matter what I do...-->
                 <!-- Filed https://github.com/angular/components/issues/25849 for this, fixed in release 15 (coming soon) -->
-                <div *ngFor="let tagID of selectedTags">
+                <div *ngFor="let tagID of questionManager.selectedTags">
                     <mat-chip *ngIf="apiServer.getTagName(tagID) != ''"
                         [style.background-color]="pastelColorForText(apiServer.getTagName(tagID))">
                         {{apiServer.getTagName(tagID)}}</mat-chip>
                 </div>
             </mat-chip-list>
-            <i *ngIf="selectedTags.length == 0">No tags selected yet</i>
-            <mat-progress-bar value="{{completionPercentage}}" class="py-3"></mat-progress-bar>
+            <i *ngIf="questionManager.selectedTags.length == 0">No tags selected yet</i>
+            <mat-progress-bar value="{{questionManager.completionPercentage}}" class="py-3"></mat-progress-bar>
             <mat-divider class="my-3"></mat-divider>
-            <h1 *ngIf="questionsError !== undefined">Failed to get questions: <code>{{ questionsError }}</code></h1>
-            <app-question *ngIf="questionsError === undefined" [question]="currentQuestion"
-                (tagAdded)="tagAdded($event)" (tagRemoved)="tagRemoved($event)" [selectedTags]="selectedTags">
+            <h1 *ngIf="questionManager.fetchErr !== undefined">Failed to get question:
+                <code>{{ questionManager.fetchErr }}</code>
+            </h1>
+            <app-question *ngIf="questionManager.fetchErr === undefined" [question]="questionManager.currentQuestion"
+                (tagAdded)="tagAdded($event)" (tagRemoved)="tagRemoved($event)"
+                [selectedTags]="questionManager.selectedTags">
             </app-question>
             <div class="flex flex-row-reverse py-3">
                 <button mat-raised-button class="mx-1 flex-grow-0" color="primary" (click)="nextQuestion()">
-                    {{completionPercentage == 100 ? "Submit" : "Next Question"}}
+                    {{questionManager.completionPercentage == 100 ? "Submit" : "Next Question"}}
                 </button>
                 <button mat-raised-button class="mx-1 flex-grow-0" color="basic" (click)="prevQuestion()">Back</button>
                 <div class="flex-grow"></div>
@@ -44,7 +49,7 @@
             </div>
         </mat-sidenav>
         <mat-sidenav-content class="p-3">
-            <app-fileviewer [fileID]="currentFileID"></app-fileviewer>
+            <app-fileviewer [fileID]="questionManager.currentFileID"></app-fileviewer>
         </mat-sidenav-content>
     </mat-sidenav-container>
 </div>
