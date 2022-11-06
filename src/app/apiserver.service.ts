@@ -123,30 +123,15 @@ export class APIServerService {
 
   constructor(private http: HttpClient, private fileSaver: FileSaverService, private appConfig: AppService) { }
 
+  // ===== Utilities
+
   responseToObjArray<T>(obs: Observable<Object>) {
     return map((original: Object) => (original as Object[]).map(element => element as T))(obs)
   }
 
-  public listTags(): Observable<Tag[]> {
-    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/tags`, this.httpOptions).pipe(
-      this.responseToObjArray<Tag>,
-      tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.userFriendlyName)))
-    )
-  }
+  mapToUndefined = map(_ => undefined)
 
-  public prepareTagsMap(): Observable<undefined> {
-    return this.listTags().pipe(map(_ => undefined))
-  }
-
-  public getTagName(tagID: number): string {
-    // Check the cache first
-    const cachedID = this.tagCache.get(tagID)
-    if (cachedID) {
-      return cachedID
-    }
-
-    return ""
-  }
+  // ===== Files
 
   public getFiles(query: FileQuery): Observable<File[]> {
     return this.http.get(`${this.appConfig.settings?.apiServerAddress}/files`, { params: query.httpParams(), headers: this.jsonHeader }).pipe(this.responseToObjArray<File>, catchError((err: any, caught: Observable<File[]>) => {
@@ -190,15 +175,72 @@ export class APIServerService {
     }))
   }
 
-  public tagFile(fileID: string, tags: number[], markAsTagged: boolean | undefined = undefined): Observable<null> {
+  public tagFile(fileID: string, tags: number[], markAsTagged: boolean | undefined = undefined): Observable<undefined> {
     const requestBody: any = {
       "tags": tags,
     }
     if (typeof (markAsTagged) != 'undefined') {
       requestBody.hasBeenTagged = markAsTagged
     }
-    return this.http.patch(`${this.appConfig.settings?.apiServerAddress}/files/${fileID}`, JSON.stringify(requestBody), this.httpOptions).pipe(map(_ => null)) // Dispose the response for now, unless we need it later
+    return this.http.patch(`${this.appConfig.settings?.apiServerAddress}/files/${fileID}`, JSON.stringify(requestBody), this.httpOptions).pipe(this.mapToUndefined) // Dispose the response for now, unless we need it later
   }
+
+  // ===== Tags
+
+  public listTags(): Observable<Tag[]> {
+    return this.http.get(`${this.appConfig.settings?.apiServerAddress}/tags`, this.httpOptions).pipe(
+      this.responseToObjArray<Tag>,
+      tap(tags => tags.forEach(tag => this.tagCache.set(tag.id, tag.userFriendlyName)))
+    )
+  }
+
+  public prepareTagsMap(): Observable<undefined> {
+    return this.listTags().pipe(this.mapToUndefined)
+  }
+
+  public getTagName(tagID: number): string {
+    // Check the cache first
+    const cachedID = this.tagCache.get(tagID)
+    if (cachedID) {
+      return cachedID
+    }
+
+    return ""
+  }
+
+  public deleteTag(tagID: number): Observable<undefined> {
+    return this.http.delete(`${this.appConfig.settings?.apiServerAddress}/tags/${tagID}`, this.httpOptions).pipe(this.mapToUndefined)
+  }
+
+  public editTag(tagID: number, name?: string, userFriendlyName?: string, description?: string): Observable<undefined> {
+    let body: any = {}
+    if (name != undefined && name.length > 0) {
+      body["name"] = name
+    }
+    if (userFriendlyName != undefined && userFriendlyName.length > 0) {
+      body["userFriendlyName"] = userFriendlyName
+    }
+    if (description != undefined && description.length > 0) {
+      body["description"] = description
+    }
+    return this.http.patch(`${this.appConfig.settings?.apiServerAddress}/tags/${tagID}`, body, this.httpOptions).pipe(this.mapToUndefined)
+  }
+
+  public createTag(tagID: number, name?: string, userFriendlyName?: string, description?: string): Observable<undefined> {
+    let body: any = {}
+    if (name != undefined && name.length > 0) {
+      body["name"] = name
+    }
+    if (userFriendlyName != undefined && userFriendlyName.length > 0) {
+      body["userFriendlyName"] = userFriendlyName
+    }
+    if (description != undefined && description.length > 0) {
+      body["description"] = description
+    }
+    return this.http.patch(`${this.appConfig.settings?.apiServerAddress}/tags/${tagID}`, body, this.httpOptions).pipe(this.mapToUndefined)
+  }
+
+  // ===== Questions
 
   public listQuestions(): Observable<Question[]> {
     return this.http.get(`${this.appConfig.settings?.apiServerAddress}/questions`, this.httpOptions).pipe(

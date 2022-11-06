@@ -33,8 +33,9 @@
         <app-fileviewer class="w-full h-full text-white" [fileID]="queryManager.viewingFileID">
         </app-fileviewer>
     </div>
-    <app-toolbar class="flex-0" (onTagClick)="router.navigate(['/tag'])" [currentMode]="'Searching'"></app-toolbar>
-    <mat-sidenav-container class="flex-grow" disableClose>
+    <app-toolbar class="flex-0" (onTagClick)="router.navigate(['/tag'])"
+        (onSettingsClick)="router.navigate(['/settings'])" [currentMode]="'Searching'"></app-toolbar>
+    <mat-sidenav-container class=" flex-grow" disableClose>
         <mat-sidenav opened="true" mode="side" class="min-w-fit w-fit p-3">
             <app-searchinput (queryChanged)="this.queryManager.navigateToQuery($event)" [query]="queryManager.query">
             </app-searchinput>

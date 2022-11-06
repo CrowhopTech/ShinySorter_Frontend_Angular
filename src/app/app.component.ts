@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-export type ToolbarMode = "Tagging" | "Searching";
+export type ToolbarMode = "Tagging" | "Searching" | "Settings";
 
 @Component({
   selector: 'app-root',

@@ -13,11 +13,12 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TaggingComponent } from './tagging/tagging.component';
 import { SearchingComponent } from './searching/searching.component';
@@ -30,6 +31,9 @@ import { FileviewerComponent } from './fileviewer/fileviewer.component';
 import { FileSaverModule } from 'ngx-filesaver';
 import { AppService } from './app.service';
 import { APP_BASE_HREF } from '@angular/common';
+import { SettingsComponent } from './settings/settings.component';
+import { TagSettingsComponent } from './settings/tag-settings/tag-settings.component';
+import { QuestionSettingsComponent } from './settings/question-settings/question-settings.component';
 
 export function initApp(appService: AppService) {
   return () => appService.load();
@@ -45,7 +49,10 @@ export function initApp(appService: AppService) {
     ExclusivetoggleComponent,
     SearchinputComponent,
     QuestionComponent,
-    FileviewerComponent
+    FileviewerComponent,
+    SettingsComponent,
+    TagSettingsComponent,
+    QuestionSettingsComponent
   ],
   imports: [
     BrowserModule,
@@ -65,6 +72,7 @@ export function initApp(appService: AppService) {
     MatRadioModule,
     MatSlideToggleModule,
     MatSidenavModule,
+    MatTabsModule,
     HttpClientModule,
     FileSaverModule,
   ],
