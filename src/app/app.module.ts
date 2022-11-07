@@ -11,8 +11,11 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
@@ -35,6 +38,10 @@ import { SettingsComponent } from './settings/settings.component';
 import { TagSettingsComponent } from './settings/tag-settings/tag-settings.component';
 import { QuestionSettingsComponent } from './settings/question-settings/question-settings.component';
 import { ApiModule, Configuration } from 'angular-client';
+import { TagTileComponent } from './settings/tag-settings/tag-tile/tag-tile.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TagCreateTileComponent } from './settings/tag-settings/tag-create-tile/tag-create-tile.component';
+import { TagDeleteDialogComponent } from './settings/tag-settings/tag-delete-dialog/tag-delete-dialog.component';
 
 export function initApp(appService: AppService) {
   return () => appService.load().then(_ => {
@@ -65,7 +72,10 @@ export function getApiConfig() {
     FileviewerComponent,
     SettingsComponent,
     TagSettingsComponent,
-    QuestionSettingsComponent
+    QuestionSettingsComponent,
+    TagTileComponent,
+    TagCreateTileComponent,
+    TagDeleteDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -78,8 +88,11 @@ export function getApiConfig() {
     MatCardModule,
     MatCheckboxModule,
     MatChipsModule,
+    MatDialogModule,
     MatDividerModule,
+    MatFormFieldModule,
     MatGridListModule,
+    MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatRadioModule,
@@ -88,6 +101,8 @@ export function getApiConfig() {
     MatTabsModule,
     HttpClientModule,
     FileSaverModule,
+    FormsModule,
+    ReactiveFormsModule,
     ApiModule.forRoot(getApiConfig)
   ],
   providers: [

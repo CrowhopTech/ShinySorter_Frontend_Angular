@@ -1,38 +1,28 @@
 import { Injectable } from '@angular/core';
-import { PetService } from 'angular-client';
-import { APIServerService, Tag } from 'src/app/apiserver.service';
+import { DefaultService as ShinySorterService, TagEntry } from 'angular-client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TagSettingsService {
-  private _tags?: Tag[]
+  private _tags?: TagEntry[]
   private _tagsFetchError?: string
 
-  constructor(private apiServer: APIServerService, private swagger: PetService) { }
+  public get tags() { return this._tags }
+  public get tagsErr() { return this._tagsFetchError }
 
-  public onInit() {
-
-  }
+  constructor(private apiService: ShinySorterService) { }
 
   public refetchTags() {
     this._tags = undefined
     this._tagsFetchError = undefined
-    this.apiServer.listTags().subscribe({
-      next: tags => this._tags = tags,
-      error: err => this._tagsFetchError = err.toString()
+    this.apiService.listTags().subscribe({
+      next: tags => {
+        this._tags = tags
+      },
+      error: err => {
+        this._tagsFetchError = err.toString()
+      }
     })
-  }
-
-  public deleteTag(tagID: number) {
-
-  }
-
-  public editTag(tagID: number) {
-
-  }
-
-  public createTag() {
-
   }
 }

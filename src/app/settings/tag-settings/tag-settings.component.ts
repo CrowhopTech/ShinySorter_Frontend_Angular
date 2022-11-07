@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { APIUtilityService } from 'src/app/apiutility.service';
+import { TagSettingsService } from './tag-settings.service';
 
 @Component({
   selector: 'app-tag-settings',
@@ -6,10 +8,9 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./tag-settings.component.sass']
 })
 export class TagSettingsComponent implements OnInit {
-
-  constructor() { }
+  constructor(public apiUtility: APIUtilityService, public tagSettings: TagSettingsService) { }
 
   ngOnInit(): void {
+    this.tagSettings.refetchTags()
   }
-
 }
