@@ -4,7 +4,7 @@ import { DefaultService as ShinySorterService } from 'angular-client';
 import { FileSaverService } from 'ngx-filesaver';
 import { map, Observable } from 'rxjs';
 import { AppConfig, AppService } from './app.service';
-import { File } from 'angular-client';
+import { FileEntry } from 'angular-client';
 
 @Injectable({
   providedIn: 'root'
@@ -62,7 +62,7 @@ export class APIUtilityService {
     })
   }
 
-  public getRandomUntaggedFile(): Observable<File | null> {
+  public getRandomUntaggedFile(): Observable<FileEntry | null> {
     return this.apiService.listFiles([], "all", [], "all", false).pipe(map(untaggedFiles => {
       if (untaggedFiles.length == 0) {
         return null

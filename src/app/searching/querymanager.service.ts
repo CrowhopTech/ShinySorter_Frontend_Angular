@@ -3,7 +3,7 @@ import { EventEmitter, Injectable, Output } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SearchMode, FileQuery } from '../filequery';
-import { DefaultService as ShinySorterService, File } from 'angular-client';
+import { DefaultService as ShinySorterService, FileEntry } from 'angular-client';
 import { APIUtilityService } from '../apiutility.service';
 
 const includeTagsParam = "includeTags"
@@ -48,9 +48,9 @@ export class QueryManagerService {
 
   private _query: FileQuery;
   private _viewingFileID: string;
-  private _viewingFile: File | undefined;
+  private _viewingFile: FileEntry | undefined;
 
-  private _searchResult: File[] | undefined = undefined
+  private _searchResult: FileEntry[] | undefined = undefined
   private _searchSubscription: Subscription | null = null
   private _searchError: string | undefined = undefined
 
@@ -62,11 +62,11 @@ export class QueryManagerService {
     return this._viewingFileID
   }
 
-  public get viewingFile(): File | undefined {
+  public get viewingFile(): FileEntry | undefined {
     return this._viewingFile
   }
 
-  public get searchResult(): File[] | undefined {
+  public get searchResult(): FileEntry[] | undefined {
     return this._searchResult
   }
 
@@ -135,7 +135,7 @@ export class QueryManagerService {
       this._searchResult = undefined
       this._searchError = undefined
       this._searchSubscription = this.apiService.listFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true).subscribe({
-        next: (files: File[]) => {
+        next: (files: FileEntry[]) => {
           this._searchResult = files
           this._searchError = undefined
           this.searchResultReady.emit()

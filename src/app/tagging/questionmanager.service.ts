@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
-import { DefaultService as ShinySorterService, File, Question } from 'angular-client';
+import { DefaultService as ShinySorterService, FileEntry, QuestionEntry } from 'angular-client';
 
 const selectedTagsParam = "selectedTags"
 const orderingIDParam = "orderingID"
@@ -19,7 +19,7 @@ export class QuestionManagerService {
 
   private _currentFileID?: string = undefined
   public get currentFileID() { return this._currentFileID }
-  private _currentFile?: File = undefined
+  private _currentFile?: FileEntry = undefined
   public get currentFile() { return this._currentFile }
 
   private _selectedTags: number[] = []
@@ -31,9 +31,9 @@ export class QuestionManagerService {
   private _fetchErr?: string
   public get fetchErr() { return this._fetchErr }
 
-  private _questions?: Question[] = undefined
+  private _questions?: QuestionEntry[] = undefined
   private _orderingID?: number = undefined
-  private _currentQuestion: Question | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
+  private _currentQuestion: QuestionEntry | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
   public get currentQuestion() { return this._currentQuestion }
 
   constructor(private router: Router, private route: ActivatedRoute, private apiService: ShinySorterService) { }

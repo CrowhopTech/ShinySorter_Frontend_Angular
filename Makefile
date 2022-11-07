@@ -9,4 +9,4 @@ swagger-client:
 	-i /swagger.yaml \
 	-l typescript-angular --additional-properties ngVersion=14 \
     -o /local/angular-client
-	sudo chown -r adamukaapan:adamukaapan angular-client
+	sudo chown -R adamukaapan:adamukaapan angular-client

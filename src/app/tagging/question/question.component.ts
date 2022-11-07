@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatRadioChange } from '@angular/material/radio';
-import { Question } from 'angular-client';
+import { QuestionEntry } from 'angular-client';
 
 @Component({
   selector: 'app-question',
@@ -10,7 +10,7 @@ import { Question } from 'angular-client';
 })
 export class QuestionComponent implements OnInit {
   // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
-  @Input() question: Question | null | undefined = undefined
+  @Input() question: QuestionEntry | null | undefined = undefined
   @Input() selectedTags: number[] = []
 
   lastRadioSelection: number | undefined = undefined

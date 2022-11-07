@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import { Params } from '@angular/router';
-import { Tag } from 'angular-client';
+import { TagEntry } from 'angular-client';
 
 export type SearchMode = "any" | "all"
 
@@ -48,17 +48,17 @@ export class FileQuery {
     return params
   }
 
-  public getIncludedTags(allTags: Tag[] | undefined): Tag[] {
+  public getIncludedTags(allTags: TagEntry[] | undefined): TagEntry[] {
     if (!allTags) return []
     return allTags.filter(tag => this.includeTags.find(id => tag.id === id))
   }
 
-  public getExcludedTags(allTags: Tag[] | undefined): Tag[] {
+  public getExcludedTags(allTags: TagEntry[] | undefined): TagEntry[] {
     if (!allTags) return []
     return allTags.filter(tag => this.excludeTags.find(id => tag.id === id))
   }
 
-  public getUnusedTags(allTags: Tag[] | undefined): Tag[] {
+  public getUnusedTags(allTags: TagEntry[] | undefined): TagEntry[] {
     if (!allTags) return []
     return allTags.filter(tag => (!this.includeTags.find(id => tag.id === id) && !this.excludeTags.find(id => tag.id === id)))
   }
