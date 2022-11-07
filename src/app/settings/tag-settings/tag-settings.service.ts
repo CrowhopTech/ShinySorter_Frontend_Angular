@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { PetService } from 'angular-client';
 import { APIServerService, Tag } from 'src/app/apiserver.service';
 
 @Injectable({
@@ -8,7 +9,7 @@ export class TagSettingsService {
   private _tags?: Tag[]
   private _tagsFetchError?: string
 
-  constructor(private apiServer: APIServerService) { }
+  constructor(private apiServer: APIServerService, private swagger: PetService) { }
 
   public onInit() {
 

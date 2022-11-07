@@ -2,7 +2,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { SearchMode, FileQuery, APIServerService, File } from '../apiserver.service';
+import { SearchMode, FileQuery } from '../filequery';
+import { DefaultService as ShinySorterService, File } from 'angular-client';
+import { APIUtilityService } from '../apiutility.service';
 
 const includeTagsParam = "includeTags"
 const excludeTagsParam = "excludeTags"
@@ -87,7 +89,10 @@ export class QueryManagerService {
     })
   }
 
-  public viewFile(fileID: string) {
+  public viewFile(fileID?: string) {
+    if (!fileID || fileID.length == 0) {
+      return
+    }
     this.router.navigate(["/search"], {
       queryParamsHandling: 'merge',
       queryParams: {
@@ -100,7 +105,7 @@ export class QueryManagerService {
     this.router.navigate(["/search"])
   }
 
-  constructor(private router: Router, private route: ActivatedRoute, private apiServer: APIServerService) {
+  constructor(private router: Router, private route: ActivatedRoute, private apiService: ShinySorterService, private apiUtility: APIUtilityService) {
     this._query = new FileQuery([], [], "all", "all", true)
     this._viewingFileID = ""
     this._viewingFile = undefined
@@ -121,7 +126,7 @@ export class QueryManagerService {
       this._query = newQuery
       this._viewingFileID = viewingFile ? viewingFile : ""
       if (this._viewingFileID != "") {
-        this.apiServer.getFile(this.viewingFileID).subscribe(f => this._viewingFile = f)
+        this.apiService.getFileById(this.viewingFileID).subscribe(f => this._viewingFile = f)
       }
 
       if (this._searchSubscription) {
@@ -129,7 +134,7 @@ export class QueryManagerService {
       }
       this._searchResult = undefined
       this._searchError = undefined
-      this._searchSubscription = this.apiServer.getFiles(this.query).subscribe({
+      this._searchSubscription = this.apiService.listFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true).subscribe({
         next: (files: File[]) => {
           this._searchResult = files
           this._searchError = undefined

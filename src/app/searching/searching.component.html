@@ -10,21 +10,20 @@
             <mat-icon color="{{ viewerInfoOpen ? 'accent' : '' }}">info</mat-icon>
         </button>
         <button mat-icon-button disableRipple class="viewer-button absolute left-16 top-2"
-            (click)="apiServer.downloadFileContents(queryManager.viewingFileID)">
+            (click)="apiUtility.downloadFileContents(queryManager.viewingFileID)">
             <mat-icon>download</mat-icon>
         </button>
         <div id="info-bar" [class.viewer-open]="viewerInfoOpen" class="fixed w-full text-white">
             <div class="relative left-28 p-3 flex flex-col">
                 <h1>{{ queryManager.viewingFileID }}</h1>
                 <div *ngIf="queryManager.viewingFile != undefined">
-                    <h3 *ngIf="tagsFetchError !== undefined">Failed to get tags: <code>{{ tagsFetchError }}</code></h3>
                     <mat-chip-list
-                        *ngIf="tagsFetchError === undefined && queryManager.viewingFile != undefined && queryManager.viewingFile.tags.length > 0"
+                        *ngIf="queryManager.viewingFile != undefined && queryManager.viewingFile.tags != undefined && queryManager.viewingFile.tags.length > 0"
                         class="taglist">
                         <div *ngFor="let tagID of queryManager.viewingFile.tags">
-                            <mat-chip *ngIf="apiServer.getTagName(tagID) != ''"
-                                [style.background-color]="pastelColorForText(apiServer.getTagName(tagID))">
-                                {{apiServer.getTagName(tagID)}}</mat-chip>
+                            <mat-chip *ngIf="apiUtility.getTagName(tagID) != ''"
+                                [style.background-color]="pastelColorForText(apiUtility.getTagName(tagID))">
+                                {{apiUtility.getTagName(tagID)}}</mat-chip>
                         </div>
                     </mat-chip-list>
                 </div>
@@ -54,7 +53,7 @@
             <mat-grid-list *ngIf="queryManager.searchResult != undefined" cols="4" rowHeight="256">
                 <mat-grid-tile *ngFor="let file of queryManager.searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"
-                        [src]="apiServer.getFileThumbAddress(file.id)" (click)="queryManager.viewFile(file.id)" />
+                        [src]="apiUtility.getFileThumbAddress(file.id)" (click)="queryManager.viewFile(file.id)" />
                 </mat-grid-tile>
             </mat-grid-list>
         </mat-sidenav-content>

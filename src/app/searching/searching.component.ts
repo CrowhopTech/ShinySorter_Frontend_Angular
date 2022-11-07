@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { DefaultService as ShinySorterService } from 'angular-client';
 import { distinctUntilChanged, filter, fromEvent, map } from 'rxjs';
-import { APIServerService } from '../apiserver.service';
+import { APIUtilityService } from '../apiutility.service';
 import { QueryManagerService } from './querymanager.service';
 
 @Component({
@@ -12,9 +13,10 @@ import { QueryManagerService } from './querymanager.service';
 export class SearchingComponent implements OnInit {
   viewerInfoOpen: boolean = false
 
-  tagsFetchError: string | undefined = undefined
+  // tagsMap?: Map<number, string>
+  // tagsFetchError?: string
 
-  constructor(public router: Router, public apiServer: APIServerService, public queryManager: QueryManagerService) { }
+  constructor(public router: Router, public queryManager: QueryManagerService, private apiService: ShinySorterService, public apiUtility: APIUtilityService) { }
 
   pastelColorForText(text: string | undefined): string {
     if (!text) {
@@ -29,6 +31,8 @@ export class SearchingComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.apiUtility.updateTagCache()
+
     fromEvent(document, 'keydown').
       pipe(
         map((e: Event) => e as KeyboardEvent),
@@ -41,9 +45,11 @@ export class SearchingComponent implements OnInit {
         }
       })
 
-    this.apiServer.prepareTagsMap().subscribe({
-      next: _ => { this.tagsFetchError = undefined },
-      error: err => { this.tagsFetchError = err.toString() }
-    })
+    // this.apiService.listTags().subscribe({
+    //   next: tags => {
+    //     tags.forEach(tag => { if (tag.id && tag.userFriendlyName) { this.tagsMap?.set(tag.id, tag.userFriendlyName) } })
+    //   },
+    //   error: err => { this.tagsFetchError = err.toString() }
+    // })
   }
 }

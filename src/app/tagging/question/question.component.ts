@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatRadioChange } from '@angular/material/radio';
-import { Question } from 'src/app/apiserver.service';
+import { Question } from 'angular-client';
 
 @Component({
   selector: 'app-question',
@@ -29,7 +29,7 @@ export class QuestionComponent implements OnInit {
       return false
     }
 
-    if (tagID == -1) {
+    if (tagID == -1 && this.question.tagOptions) {
       // Check that none of the tag options in the question are in our selected list
       // O(N^2) but small data size
       return this.question.tagOptions.every(to => !this.tagIsSelected(to.tagID))
@@ -39,7 +39,7 @@ export class QuestionComponent implements OnInit {
   }
 
   radioChanged(event: MatRadioChange): void {
-    this.question?.tagOptions.forEach(to => {
+    this.question?.tagOptions?.forEach(to => {
       if (to.tagID == event.value) {
         // This is the tag option that we're adding: emit an added event
         this.tagAdded.emit(to.tagID)

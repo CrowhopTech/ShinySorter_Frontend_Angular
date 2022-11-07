@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnInit } from '@angular/core';
-import { APIServerService, File } from '../apiserver.service';
+import { DefaultService as ShinySorterService, File } from 'angular-client';
+import { APIUtilityService } from '../apiutility.service';
 
 export type FileType = "image" | "video" | "unknown"
 
@@ -18,7 +19,7 @@ export class FileviewerComponent implements OnInit {
 
   @Input() set fileID(value: string) {
     this._fileID = value
-    this.apiServer.getFile(value).subscribe({
+    this.apiService.getFileById(value).subscribe({
       next: (file: File) => this.file = file,
       error: (err: any) => {
         this.imageNotFound = false
@@ -40,7 +41,7 @@ export class FileviewerComponent implements OnInit {
   }
 
   getFileType(): FileType {
-    if (!this.file) {
+    if (!this.file || !this.file.mimeType) {
       return "unknown"
     }
     if (this.file.mimeType.startsWith("video")) {
@@ -52,10 +53,10 @@ export class FileviewerComponent implements OnInit {
     return "unknown"
   }
 
-  constructor(public apiServer: APIServerService) { }
+  constructor(public apiService: ShinySorterService, public apiUtility: APIUtilityService) { }
 
   ngOnInit(): void {
-
+    this.apiUtility.updateTagCache()
   }
 
 }

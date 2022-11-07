@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { combineLatest, first, Subscription } from 'rxjs';
-import { APIServerService, Question, File } from '../apiserver.service';
+import { combineLatest, Subscription } from 'rxjs';
+import { DefaultService as ShinySorterService, File, Question } from 'angular-client';
 
 const selectedTagsParam = "selectedTags"
 const orderingIDParam = "orderingID"
@@ -36,7 +36,7 @@ export class QuestionManagerService {
   private _currentQuestion: Question | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
   public get currentQuestion() { return this._currentQuestion }
 
-  constructor(private apiServer: APIServerService, private router: Router, private route: ActivatedRoute) { }
+  constructor(private router: Router, private route: ActivatedRoute, private apiService: ShinySorterService) { }
 
   private getNumberArrayParam(params: Params, param: string): number[] {
     const val: string = params[param]
@@ -78,8 +78,8 @@ export class QuestionManagerService {
     this._currentFileID = fileID
     this._orderingID = orderingID
 
-    const listQuestions = this.apiServer.listQuestions()
-    const getFile = this.apiServer.getFile(this._currentFileID)
+    const listQuestions = this.apiService.listQuestions()
+    const getFile = this.apiService.getFileById(this._currentFileID)
 
     if (this._querySubscription) {
       this._querySubscription.unsubscribe()
@@ -102,7 +102,7 @@ export class QuestionManagerService {
       }
 
       // Find next highest ordering ID
-      const nextQuestionIndex = questions.findIndex(q => this._orderingID != undefined && q.orderingID >= this._orderingID)
+      const nextQuestionIndex = questions.findIndex(q => this._orderingID != undefined && (q.orderingID ? q.orderingID : 0) >= this._orderingID)
       const nextQuestion = nextQuestionIndex >= 0 ? questions[nextQuestionIndex] : undefined
       if (nextQuestion === undefined) {
         // We're done! No more questions
@@ -110,7 +110,7 @@ export class QuestionManagerService {
         this._completionPercentage = 100
         return
       }
-      if (nextQuestion.orderingID == this._orderingID) {
+      if ((nextQuestion.orderingID ? nextQuestion.orderingID : 0) == this._orderingID) {
         // Our ordering ID matches! This is our current question
         this._currentQuestion = nextQuestion
         this._completionPercentage = (nextQuestionIndex / questions.length) * 100
@@ -137,7 +137,7 @@ export class QuestionManagerService {
         this._questions = result[0]
         this._currentFile = result[1]
 
-        if (this._currentFile.tags.length > 0) {
+        if (this._currentFile.tags && this._currentFile.tags.length > 0) {
           this._selectedTags = this._currentFile.tags
         }
 
@@ -153,13 +153,16 @@ export class QuestionManagerService {
       return
     }
 
-    const maxOrderingID = this._questions[this._questions.length - 1].orderingID
+    const lastQuestion = this._questions[this._questions.length - 1]
 
-    if (this._orderingID > maxOrderingID) {
+    if (lastQuestion.orderingID && this._orderingID > lastQuestion.orderingID) {
       // If we're past the end, let's save this file
       // TODO: gracefully handle errors on tagging!
       // TODO: move this to an external event handler?
-      this.apiServer.tagFile(this._currentFileID, this._selectedTags, true).subscribe(_ => {
+      this.apiService.patchFileById(this._currentFileID, {
+        tags: this._selectedTags,
+        hasBeenTagged: true
+      }).subscribe(_ => {
         this.wipeVars()
         this.router.navigate(['/tag'])
       })
@@ -167,7 +170,7 @@ export class QuestionManagerService {
     }
 
     this._orderingID++
-    this._orderingID = Math.min(maxOrderingID + 1, this._orderingID) // 1 over is okay, denotes we're done
+    this._orderingID = lastQuestion.orderingID ? Math.min(lastQuestion.orderingID + 1, this._orderingID) : undefined // 1 over is okay, denotes we're done
 
     this.renavigate()
   }
@@ -178,7 +181,7 @@ export class QuestionManagerService {
       return
     }
 
-    const allLowerQuestions = this._questions.filter(q => this._orderingID && q.orderingID < this._orderingID)
+    const allLowerQuestions = this._questions.filter(q => this._orderingID && q.orderingID && q.orderingID < this._orderingID)
     this._orderingID = allLowerQuestions.length > 0 ? allLowerQuestions[allLowerQuestions.length - 1].orderingID : 0
 
     this.renavigate()

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { SearchMode } from 'src/app/apiserver.service';
+import { SearchMode } from 'src/app/filequery';
 
 @Component({
   selector: 'app-exclusivetoggle',

@@ -1,8 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
-import { APIServerService, FileQuery, Question } from '../apiserver.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { APIUtilityService } from '../apiutility.service';
 import { QuestionManagerService } from './questionmanager.service';
+import { DefaultService as ShinySorterService } from 'angular-client';
 
 @Component({
   selector: 'app-tagging',
@@ -12,9 +13,8 @@ import { QuestionManagerService } from './questionmanager.service';
 export class TaggingComponent implements OnInit {
   noMoreFiles: boolean = false
   navigateError: string | undefined = undefined
-  tagsFetchError: string | undefined = undefined
 
-  constructor(public router: Router, private route: ActivatedRoute, public apiServer: APIServerService, public questionManager: QuestionManagerService) { }
+  constructor(public router: Router, private route: ActivatedRoute, public apiService: ShinySorterService, public apiUtility: APIUtilityService, public questionManager: QuestionManagerService) { }
 
   pastelColorForText(text: string | undefined): string {
     if (!text) {
@@ -61,7 +61,7 @@ export class TaggingComponent implements OnInit {
       }
 
       // Handle if we need to pick a new image
-      this.apiServer.getRandomUntaggedFile().subscribe({
+      this.apiUtility.getRandomUntaggedFile().subscribe({
         next: untaggedFile => {
           this.navigateError = undefined
           if (untaggedFile === null) {
@@ -79,11 +79,6 @@ export class TaggingComponent implements OnInit {
           }
         }
       })
-    })
-
-    this.apiServer.prepareTagsMap().subscribe({
-      next: _ => { this.tagsFetchError = undefined },
-      error: err => { this.tagsFetchError = err.toString() }
     })
   }
 }

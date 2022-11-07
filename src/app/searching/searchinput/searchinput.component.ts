@@ -1,6 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { APIServerService, FileQuery, SearchMode, Tag } from 'src/app/apiserver.service';
+import { DefaultService as ShinySorterService, Tag } from 'angular-client';
+import { FileQuery, SearchMode } from 'src/app/filequery';
+import { APIUtilityService } from 'src/app/apiutility.service';
 
 @Component({
   selector: 'app-searchinput',
@@ -16,10 +18,10 @@ export class SearchinputComponent implements OnInit {
   allTags: Tag[] | undefined = undefined
   tagsErr: string | undefined = undefined
 
-  constructor(private apiServer: APIServerService) { }
+  constructor(private apiService: ShinySorterService, private apiUtility: APIUtilityService) { }
 
   ngOnInit(): void {
-    this.apiServer.listTags().subscribe({
+    this.apiService.listTags().subscribe({
       next: tags => {
         this.allTags = tags
       },
@@ -41,7 +43,10 @@ export class SearchinputComponent implements OnInit {
   }
 
   // Called when a tag is moved from one category to another
-  tagAction(action: "include" | "exclude" | "neutral", tag: number) {
+  tagAction(action: "include" | "exclude" | "neutral", tag?: number) {
+    if (tag == undefined) {
+      return
+    }
     const newInclude = new Set<number>();
     const newExclude = new Set<number>();
     switch (action) {

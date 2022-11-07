@@ -34,9 +34,22 @@ import { APP_BASE_HREF } from '@angular/common';
 import { SettingsComponent } from './settings/settings.component';
 import { TagSettingsComponent } from './settings/tag-settings/tag-settings.component';
 import { QuestionSettingsComponent } from './settings/question-settings/question-settings.component';
+import { ApiModule, Configuration } from 'angular-client';
 
 export function initApp(appService: AppService) {
-  return () => appService.load();
+  return () => appService.load().then(_ => {
+    // Once the config is loaded, update the API client config with the new base path
+    if (appService.settings?.apiServerAddress) {
+      apiConfig.basePath = appService.settings?.apiServerAddress
+    }
+  });
+}
+
+export const apiConfig = new Configuration({
+  basePath: ""
+});
+export function getApiConfig() {
+  return apiConfig;
 }
 
 @NgModule({
@@ -75,6 +88,7 @@ export function initApp(appService: AppService) {
     MatTabsModule,
     HttpClientModule,
     FileSaverModule,
+    ApiModule.forRoot(getApiConfig)
   ],
   providers: [
     {
