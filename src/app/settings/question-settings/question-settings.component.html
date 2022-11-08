@@ -1,1 +1,14 @@
-<h1>Edit questions</h1>
+<mat-card>
+    <mat-card-title>
+        Tags Without Questions
+    </mat-card-title>
+    <mat-card-content>
+        <i>None</i>
+    </mat-card-content>
+</mat-card>
+<mat-divider class="my-3 w-full"></mat-divider>
+<mat-accordion>
+    <app-question-tile *ngFor="let q of questions" [question]="q"
+        (updateQuestion)="updateQuestion(q.questionID, $event)">
+    </app-question-tile>
+</mat-accordion>

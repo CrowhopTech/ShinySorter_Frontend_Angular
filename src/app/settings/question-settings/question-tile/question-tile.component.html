@@ -1,0 +1,37 @@
+<mat-expansion-panel>
+    <mat-expansion-panel-header *ngIf="question">
+        <mat-panel-title>
+            <b>{{ question.questionText }}</b>
+        </mat-panel-title>
+        <mat-panel-description>
+            {{ question.tagOptions.length }} options,
+            {{ question.mutuallyExclusive ? 'select one' : 'select multiple' }}
+            <mat-chip-list *ngIf="question.tagOptions.length> 0" class="ml-3">
+                <div *ngFor="let tagOption of question.tagOptions">
+                    <mat-chip *ngIf="apiUtility.getTagName(tagOption.tagID) != ''"
+                        [style.background-color]="pastelColorForText(apiUtility.getTagName(tagOption.tagID))">
+                        {{apiUtility.getTagName(tagOption.tagID)}}</mat-chip>
+                </div>
+            </mat-chip-list>
+        </mat-panel-description>
+    </mat-expansion-panel-header>
+    <div *ngIf="question" class="flex flex-row">
+        <div class="flex-grow">
+            <h3>Options</h3>
+            <div *ngFor="let tagOption of question.tagOptions">
+                <mat-chip-list>
+                    <mat-chip *ngIf="apiUtility.getTagName(tagOption.tagID) != ''"
+                        [style.background-color]="pastelColorForText(apiUtility.getTagName(tagOption.tagID))">
+                        {{apiUtility.getTagName(tagOption.tagID)}}</mat-chip>
+                    <span *ngIf="apiUtility.getTagName(tagOption.tagID) != tagOption.optionText">:
+                        {{tagOption.optionText}}</span>
+                </mat-chip-list>
+            </div>
+        </div>
+        <div class="flex-grow-0 flex flex-col-reverse">
+            <button mat-button (click)="editQuestion()">
+                Edit Question
+            </button>
+        </div>
+    </div>
+</mat-expansion-panel>

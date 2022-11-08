@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { throwToolbarMixedModesError } from '@angular/material/toolbar';
 import { DefaultService as ShinySorterService, TagEntry } from 'angular-client';
 import { interval, timer } from 'rxjs';
 
@@ -18,7 +20,7 @@ export class TagCreateTileComponent implements OnInit {
   editing: boolean = false
   savePending: boolean = false // Set to true when we start the tag create call, set to false once it finishes
 
-  constructor(private apiService: ShinySorterService) { }
+  constructor(private apiService: ShinySorterService, private snackbar: MatSnackBar) { }
 
   ngOnInit(): void { }
 
@@ -37,6 +39,7 @@ export class TagCreateTileComponent implements OnInit {
       this.editing = false
       this.savePending = false
       this.refetchRequired.emit()
+      this.snackbar.open(`Tag '${this.newName}' created successfully`, undefined, { duration: 3000 })
     })
   }
 }

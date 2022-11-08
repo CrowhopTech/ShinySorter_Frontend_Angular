@@ -13,14 +13,17 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion'
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TaggingComponent } from './tagging/tagging.component';
@@ -42,6 +45,8 @@ import { TagTileComponent } from './settings/tag-settings/tag-tile/tag-tile.comp
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TagCreateTileComponent } from './settings/tag-settings/tag-create-tile/tag-create-tile.component';
 import { TagDeleteDialogComponent } from './settings/tag-settings/tag-delete-dialog/tag-delete-dialog.component';
+import { QuestionTileComponent } from './settings/question-settings/question-tile/question-tile.component';
+import { QuestionEditDialogComponent, TagOptionEditComponent } from './settings/question-settings/question-edit-dialog/question-edit-dialog.component';
 
 export function initApp(appService: AppService) {
   return () => appService.load().then(_ => {
@@ -75,7 +80,10 @@ export function getApiConfig() {
     QuestionSettingsComponent,
     TagTileComponent,
     TagCreateTileComponent,
-    TagDeleteDialogComponent
+    TagDeleteDialogComponent,
+    QuestionTileComponent,
+    QuestionEditDialogComponent,
+    TagOptionEditComponent
   ],
   imports: [
     BrowserModule,
@@ -90,14 +98,17 @@ export function getApiConfig() {
     MatChipsModule,
     MatDialogModule,
     MatDividerModule,
+    MatExpansionModule,
     MatFormFieldModule,
     MatGridListModule,
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatRadioModule,
-    MatSlideToggleModule,
+    MatSelectModule,
     MatSidenavModule,
+    MatSlideToggleModule,
+    MatSnackBarModule,
     MatTabsModule,
     HttpClientModule,
     FileSaverModule,

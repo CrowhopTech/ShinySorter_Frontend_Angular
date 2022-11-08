@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { DefaultService as ShinySorterService, TagEntry } from 'angular-client';
 import { interval, timer } from 'rxjs';
 import { TagDeleteDialogComponent } from '../tag-delete-dialog/tag-delete-dialog.component';
@@ -31,7 +32,7 @@ export class TagTileComponent implements OnInit {
   public editing: boolean = false
   public savePending: boolean = false // Set to true when we start the tag save call, set to false once it finishes
 
-  constructor(private apiService: ShinySorterService, public dialog: MatDialog) { }
+  constructor(private apiService: ShinySorterService, public dialog: MatDialog, private snackbar: MatSnackBar) { }
 
   ngOnInit(): void { }
 
@@ -69,6 +70,7 @@ export class TagTileComponent implements OnInit {
     }).subscribe(_ => {
       this.editing = false
       this.refetchRequired.emit()
+      this.snackbar.open(`Tag '${this.newName}' updated successfully`, undefined, { duration: 3000 })
     })
   }
 
