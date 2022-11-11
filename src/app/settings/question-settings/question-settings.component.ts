@@ -2,7 +2,8 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DefaultService as ShinySorterService, QuestionCreate, QuestionEntry, QuestionPatch } from 'angular-client';
+import { DefaultService as ShinySorterService, QuestionCreate, QuestionEntry, QuestionPatch, TagEntry } from 'angular-client';
+import { combineLatest } from 'rxjs';
 import { QuestionEditDialogComponent } from './question-edit-dialog/question-edit-dialog.component';
 
 @Component({
@@ -13,6 +14,7 @@ import { QuestionEditDialogComponent } from './question-edit-dialog/question-edi
 export class QuestionSettingsComponent implements OnInit {
 
   public questions?: QuestionEntry[]
+  public allUnusedTags?: Map<number, TagEntry>
 
   constructor(private apiService: ShinySorterService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
 
@@ -20,9 +22,28 @@ export class QuestionSettingsComponent implements OnInit {
     this.refreshQuestions()
   }
 
+  pastelColorForText(text: string | undefined): string {
+    if (!text) {
+      return ""
+    }
+    const hash = text.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    const pastelStrength = '93%'
+    return `hsl(${hash % 360}, ${pastelStrength}, ${pastelStrength})`;
+  }
+
   refreshQuestions() {
-    this.apiService.listQuestions().subscribe(questions => {
-      this.questions = questions
+    const listQuestions = this.apiService.listQuestions()
+    const listTags = this.apiService.listTags()
+    combineLatest([listQuestions, listTags]).subscribe(entry => {
+      this.questions = entry[0]
+
+      // Populate the allUnusedTags set with all existing question IDs: we'll then remove all ones in use to get all unused
+      this.allUnusedTags = new Map<number, TagEntry>();
+      entry[1].forEach(tag => this.allUnusedTags?.set(tag.id, tag))
+      this.questions.forEach(q => q.tagOptions.forEach(to => this.allUnusedTags?.delete(to.tagID)))
     })
   }
 

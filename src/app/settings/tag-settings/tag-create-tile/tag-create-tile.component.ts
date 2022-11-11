@@ -15,7 +15,7 @@ export class TagCreateTileComponent implements OnInit {
   @Output() refetchRequired = new EventEmitter<undefined>();
 
   newName?: string
-  newDescription?: string
+  newDescription: string = ""
 
   editing: boolean = false
   savePending: boolean = false // Set to true when we start the tag create call, set to false once it finishes
@@ -25,7 +25,7 @@ export class TagCreateTileComponent implements OnInit {
   ngOnInit(): void { }
 
   submitChanges() {
-    if (!this.newName || !this.newDescription || this.newName.length == 0) {
+    if (this.newName == undefined || this.newDescription == undefined || this.newName.length == 0) {
       return
     }
 
