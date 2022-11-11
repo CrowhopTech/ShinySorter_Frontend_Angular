@@ -14,6 +14,13 @@ export class QuestionTileComponent implements OnInit {
 
   @Input() question?: QuestionEntry
 
+  public get questionTagIDs(): number[] | undefined {
+    if (this.question == undefined) {
+      return undefined
+    }
+    return this.question.tagOptions.map(to => to.tagID)
+  }
+
   @Output() updateQuestion = new EventEmitter<QuestionPatch>();
   @Output() deleteQuestion = new EventEmitter<number>();
   @Output() reorderQuestions = new EventEmitter<number[]>();

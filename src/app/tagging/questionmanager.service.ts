@@ -3,6 +3,7 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { DefaultService as ShinySorterService, FileEntry, QuestionEntry } from 'angular-client';
 
+const imageParam = "image"
 const selectedTagsParam = "selectedTags"
 const orderingIDParam = "orderingID"
 
@@ -63,6 +64,7 @@ export class QuestionManagerService {
 
   private wipeVars() {
     // Clear any stale data from past file
+    this._currentFileID = undefined
     this._currentFile = undefined
     this._selectedTags = []
     this._questions = undefined
@@ -118,7 +120,7 @@ export class QuestionManagerService {
       }
 
       // Navigate if not equal, we're on an ID between questions
-      this.router.navigate([`/tag/${this._currentFileID}`], { queryParamsHandling: 'merge', queryParams: { [orderingIDParam]: nextQuestion.orderingID } })
+      this.router.navigate([`/tag`], { queryParamsHandling: 'merge', queryParams: { [orderingIDParam]: nextQuestion.orderingID, [imageParam]: this._currentFileID } })
     })
 
     if (this._restSubscription) {
@@ -156,6 +158,7 @@ export class QuestionManagerService {
     const lastQuestion = this._questions[this._questions.length - 1]
 
     if (lastQuestion.orderingID && this._orderingID > lastQuestion.orderingID) {
+      console.log("Patching file")
       // If we're past the end, let's save this file
       // TODO: gracefully handle errors on tagging!
       // TODO: move this to an external event handler?
@@ -164,7 +167,7 @@ export class QuestionManagerService {
         hasBeenTagged: true
       }).subscribe(_ => {
         this.wipeVars()
-        this.router.navigate(['/tag'])
+        this.router.navigate(["/tag"], { queryParams: { [imageParam]: null, [orderingIDParam]: null, [selectedTagsParam]: null } })
       })
       return
     }

@@ -6,26 +6,17 @@
         <mat-panel-description>
             {{ question.tagOptions.length }} options,
             {{ question.mutuallyExclusive ? 'select one' : 'select multiple' }}
-            <mat-chip-list *ngIf="question.tagOptions.length> 0" class="ml-3">
-                <div *ngFor="let tagOption of question.tagOptions">
-                    <mat-chip *ngIf="apiUtility.getTagName(tagOption.tagID) != ''"
-                        [style.background-color]="pastelColorForText(apiUtility.getTagName(tagOption.tagID))">
-                        {{apiUtility.getTagName(tagOption.tagID)}}</mat-chip>
-                </div>
-            </mat-chip-list>
+            <app-tag-chip [tagIDs]="questionTagIDs" class="ml-3"></app-tag-chip>
         </mat-panel-description>
     </mat-expansion-panel-header>
     <div *ngIf="question" class="flex flex-row">
         <div class="flex-grow">
             <h3>Options</h3>
-            <div *ngFor="let tagOption of question.tagOptions">
-                <mat-chip-list>
-                    <mat-chip *ngIf="apiUtility.getTagName(tagOption.tagID) != ''"
-                        [style.background-color]="pastelColorForText(apiUtility.getTagName(tagOption.tagID))">
-                        {{apiUtility.getTagName(tagOption.tagID)}}</mat-chip>
-                    <span *ngIf="apiUtility.getTagName(tagOption.tagID) != tagOption.optionText">:
-                        {{tagOption.optionText}}</span>
-                </mat-chip-list>
+            <div *ngFor="let tagOption of question.tagOptions" class="flex flex-row my-1">
+                <app-tag-chip [tagIDs]="[tagOption.tagID]" class="inline"></app-tag-chip>
+                <span class="ml-0.5 mt-1.5" *ngIf="apiUtility.getTagName(tagOption.tagID) != tagOption.optionText">
+                    : {{tagOption.optionText}}
+                </span>
             </div>
         </div>
         <div class="flex-grow-0 flex flex-col-reverse">

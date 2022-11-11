@@ -13,22 +13,7 @@ import { QueryManagerService } from './querymanager.service';
 export class SearchingComponent implements OnInit {
   viewerInfoOpen: boolean = false
 
-  // tagsMap?: Map<number, string>
-  // tagsFetchError?: string
-
   constructor(public router: Router, public queryManager: QueryManagerService, private apiService: ShinySorterService, public apiUtility: APIUtilityService) { }
-
-  pastelColorForText(text: string | undefined): string {
-    if (!text) {
-      return ""
-    }
-    const hash = text.split("").reduce((a, b) => {
-      a = (a << 5) - a + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    const pastelStrength = '93%'
-    return `hsl(${hash % 360}, ${pastelStrength}, ${pastelStrength})`;
-  }
 
   ngOnInit(): void {
     this.apiUtility.updateTagCache()

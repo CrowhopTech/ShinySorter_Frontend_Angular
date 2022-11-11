@@ -15,23 +15,19 @@ export class QuestionSettingsComponent implements OnInit {
 
   public questions?: QuestionEntry[]
   public allUnusedTags?: Map<number, TagEntry>
+  public get unusedTagIDs(): number[] | undefined {
+    if (this.allUnusedTags == undefined) {
+      return undefined
+    }
+    const ids: number[] = []
+    this.allUnusedTags.forEach(t => ids.push(t.id))
+    return ids
+  }
 
   constructor(private apiService: ShinySorterService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.refreshQuestions()
-  }
-
-  pastelColorForText(text: string | undefined): string {
-    if (!text) {
-      return ""
-    }
-    const hash = text.split("").reduce((a, b) => {
-      a = (a << 5) - a + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    const pastelStrength = '93%'
-    return `hsl(${hash % 360}, ${pastelStrength}, ${pastelStrength})`;
   }
 
   refreshQuestions() {

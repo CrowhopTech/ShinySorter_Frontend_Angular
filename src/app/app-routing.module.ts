@@ -7,7 +7,6 @@ import { TagSettingsComponent } from './settings/tag-settings/tag-settings.compo
 import { TaggingComponent } from './tagging/tagging.component';
 
 const routes: Routes = [
-  { path: "tag/:image", component: TaggingComponent },
   { path: "tag", component: TaggingComponent },
   { path: "search", component: SearchingComponent },
   {

@@ -4,11 +4,7 @@
             Tags Without Questions
         </mat-card-title>
         <mat-card-content>
-            <mat-chip-list>
-                <mat-chip *ngFor="let tag of allUnusedTags.values()"
-                    [style.background-color]="pastelColorForText(tag.userFriendlyName)">
-                    {{tag.userFriendlyName}}</mat-chip>
-            </mat-chip-list>
+            <app-tag-chip [tagIDs]="unusedTagIDs"></app-tag-chip>
         </mat-card-content>
     </mat-card>
     <mat-divider class="my-3 w-full"></mat-divider>

@@ -51,10 +51,10 @@ export class TaggingComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      const image = params["image"]
+    this.route.queryParamMap.subscribe(params => {
+      const image = params.get("image")
 
-      if (image && image != "") {
+      if (image != null && image != "") {
         // We have an image: handle it and get out!
         this.questionManager.establishFile(image)
         return
@@ -69,7 +69,7 @@ export class TaggingComponent implements OnInit {
             return
           }
 
-          this.router.navigate([`/tag/${untaggedFile.id}`], { queryParamsHandling: 'preserve' })
+          this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile.id } })
         },
         error: (err: any) => {
           if (err instanceof HttpErrorResponse) {

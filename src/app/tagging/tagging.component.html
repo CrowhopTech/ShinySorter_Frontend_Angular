@@ -17,15 +17,7 @@
     <mat-sidenav-container class="flex-grow" *ngIf="questionManager.currentFileID !== undefined">
         <mat-sidenav opened="true" mode="side" class="sidebar w-fit p-3 max-w-lg">
             <h1>Questions and tag selection</h1>
-            <mat-chip-list *ngIf="questionManager.selectedTags.length > 0" class="taglist">
-                <!-- This is adding a scroll bar at the bottom for some reason no matter what I do...-->
-                <!-- Filed https://github.com/angular/components/issues/25849 for this, fixed in release 15 (coming soon) -->
-                <div *ngFor="let tagID of questionManager.selectedTags">
-                    <mat-chip *ngIf="apiUtility.getTagName(tagID) != ''"
-                        [style.background-color]="pastelColorForText(apiUtility.getTagName(tagID))">
-                        {{apiUtility.getTagName(tagID)}}</mat-chip>
-                </div>
-            </mat-chip-list>
+            <app-tag-chip [tagIDs]="questionManager.selectedTags"></app-tag-chip>
             <i *ngIf="questionManager.selectedTags.length == 0">No tags selected yet</i>
             <mat-progress-bar value="{{questionManager.completionPercentage}}" class="py-3"></mat-progress-bar>
             <mat-divider class="my-3"></mat-divider>

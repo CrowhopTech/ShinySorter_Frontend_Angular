@@ -17,15 +17,7 @@
             <div class="relative left-28 p-3 flex flex-col">
                 <h1>{{ queryManager.viewingFileID }}</h1>
                 <div *ngIf="queryManager.viewingFile != undefined">
-                    <mat-chip-list
-                        *ngIf="queryManager.viewingFile != undefined && queryManager.viewingFile.tags != undefined && queryManager.viewingFile.tags.length > 0"
-                        class="taglist">
-                        <div *ngFor="let tagID of queryManager.viewingFile.tags">
-                            <mat-chip *ngIf="apiUtility.getTagName(tagID) != ''"
-                                [style.background-color]="pastelColorForText(apiUtility.getTagName(tagID))">
-                                {{apiUtility.getTagName(tagID)}}</mat-chip>
-                        </div>
-                    </mat-chip-list>
+                    <app-tag-chip [tagIDs]="queryManager.viewingFile.tags"></app-tag-chip>
                 </div>
             </div>
         </div>

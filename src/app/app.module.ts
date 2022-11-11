@@ -47,6 +47,7 @@ import { TagCreateTileComponent } from './settings/tag-settings/tag-create-tile/
 import { TagDeleteDialogComponent } from './settings/tag-settings/tag-delete-dialog/tag-delete-dialog.component';
 import { QuestionTileComponent } from './settings/question-settings/question-tile/question-tile.component';
 import { QuestionEditDialogComponent, TagOptionEditComponent } from './settings/question-settings/question-edit-dialog/question-edit-dialog.component';
+import { TagChipComponent } from './tag-chip/tag-chip.component';
 
 export function initApp(appService: AppService) {
   return () => appService.load().then(_ => {
@@ -85,7 +86,8 @@ export function getApiConfig() {
     QuestionEditDialogComponent,
     TagOptionEditComponent,
     QuestionDeleteDialogComponent,
-    QuestionReorderDialogComponent
+    QuestionReorderDialogComponent,
+    TagChipComponent
   ],
   imports: [
     BrowserModule,
