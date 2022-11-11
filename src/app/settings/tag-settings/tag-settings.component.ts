@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DefaultService as ShinySorterService, TagEntry } from 'angular-client';
+import { DefaultService as ShinySorterService, TagEntry, TagsService } from 'angular-client';
 import { APIUtilityService } from 'src/app/apiutility.service';
 
 @Component({
@@ -8,7 +8,7 @@ import { APIUtilityService } from 'src/app/apiutility.service';
   styleUrls: ['./tag-settings.component.sass']
 })
 export class TagSettingsComponent implements OnInit {
-  constructor(public apiUtility: APIUtilityService, private apiService: ShinySorterService) { }
+  constructor(public apiUtility: APIUtilityService, private tagsService: TagsService) { }
 
   public tags?: TagEntry[]
   public tagsErr?: string
@@ -20,7 +20,7 @@ export class TagSettingsComponent implements OnInit {
   public refetchTags() {
     this.tags = undefined
     this.tagsErr = undefined
-    this.apiService.listTags().subscribe({
+    this.tagsService.listTags().subscribe({
       next: tags => {
         this.tags = tags
       },

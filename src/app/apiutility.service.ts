@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { DefaultService as ShinySorterService } from 'angular-client';
+import { DefaultService as ShinySorterService, FilesService, TagsService } from 'angular-client';
 import { FileSaverService } from 'ngx-filesaver';
 import { map, Observable } from 'rxjs';
 import { AppConfig, AppService } from './app.service';
@@ -13,7 +13,7 @@ export class APIUtilityService {
   tagsMap?: Map<number, string>
   tagsFetchError?: string
 
-  constructor(private apiService: ShinySorterService, private appConfig: AppService, private http: HttpClient, private fileSaver: FileSaverService) {
+  constructor(private filesService: FilesService, private tagsService: TagsService, private appConfig: AppService, private http: HttpClient, private fileSaver: FileSaverService) {
     this.updateTagCache()
   }
 
@@ -21,7 +21,7 @@ export class APIUtilityService {
   public updateTagCache() {
     this.tagsMap = undefined
     this.tagsFetchError = undefined
-    this.apiService.listTags().subscribe({
+    this.tagsService.listTags().subscribe({
       next: tags => {
         this.tagsMap = new Map<number, string>();
         tags.forEach(tag => { if (tag.id && tag.userFriendlyName) { this.tagsMap?.set(tag.id, tag.userFriendlyName) } })
@@ -63,7 +63,7 @@ export class APIUtilityService {
   }
 
   public getRandomUntaggedFile(): Observable<FileEntry | null> {
-    return this.apiService.listFiles([], "all", [], "all", false).pipe(map(untaggedFiles => {
+    return this.filesService.listFiles([], "all", [], "all", false).pipe(map(untaggedFiles => {
       if (untaggedFiles.length == 0) {
         return null
       }

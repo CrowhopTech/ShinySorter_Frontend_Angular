@@ -4,13 +4,19 @@ import { HttpClient } from '@angular/common/http';
 
 
 import { DefaultService } from './api/default.service';
+import { FilesService } from './api/files.service';
+import { QuestionsService } from './api/questions.service';
+import { TagsService } from './api/tags.service';
 
 @NgModule({
   imports:      [],
   declarations: [],
   exports:      [],
   providers: [
-    DefaultService ]
+    DefaultService,
+    FilesService,
+    QuestionsService,
+    TagsService ]
 })
 export class ApiModule {
     public static forRoot(configurationFactory: () => Configuration): ModuleWithProviders<ApiModule> {

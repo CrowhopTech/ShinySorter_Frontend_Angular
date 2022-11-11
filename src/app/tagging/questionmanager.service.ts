@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
-import { DefaultService as ShinySorterService, FileEntry, QuestionEntry } from 'angular-client';
+import { DefaultService as ShinySorterService, FileEntry, FilesService, QuestionEntry, QuestionsService } from 'angular-client';
 
 const imageParam = "image"
 const selectedTagsParam = "selectedTags"
@@ -37,7 +37,8 @@ export class QuestionManagerService {
   private _currentQuestion: QuestionEntry | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
   public get currentQuestion() { return this._currentQuestion }
 
-  constructor(private router: Router, private route: ActivatedRoute, private apiService: ShinySorterService) { }
+  constructor(private router: Router, private route: ActivatedRoute, private filesService: FilesService, private questionsService: QuestionsService) {
+  }
 
   private getNumberArrayParam(params: Params, param: string): number[] {
     const val: string = params[param]
@@ -80,8 +81,8 @@ export class QuestionManagerService {
     this._currentFileID = fileID
     this._orderingID = orderingID
 
-    const listQuestions = this.apiService.listQuestions()
-    const getFile = this.apiService.getFileById(this._currentFileID)
+    const listQuestions = this.questionsService.listQuestions()
+    const getFile = this.filesService.getFileById(this._currentFileID)
 
     if (this._querySubscription) {
       this._querySubscription.unsubscribe()
@@ -162,7 +163,7 @@ export class QuestionManagerService {
       // If we're past the end, let's save this file
       // TODO: gracefully handle errors on tagging!
       // TODO: move this to an external event handler?
-      this.apiService.patchFileById(this._currentFileID, {
+      this.filesService.patchFileById(this._currentFileID, {
         tags: this._selectedTags,
         hasBeenTagged: true
       }).subscribe(_ => {

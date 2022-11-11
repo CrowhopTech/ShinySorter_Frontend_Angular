@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DefaultService as ShinySorterService, TagEntry } from 'angular-client';
+import { DefaultService as ShinySorterService, TagEntry, TagsService } from 'angular-client';
 import { FileQuery, SearchMode } from 'src/app/filequery';
 import { APIUtilityService } from 'src/app/apiutility.service';
 
@@ -18,10 +18,10 @@ export class SearchinputComponent implements OnInit {
   allTags: TagEntry[] | undefined = undefined
   tagsErr: string | undefined = undefined
 
-  constructor(private apiService: ShinySorterService, private apiUtility: APIUtilityService) { }
+  constructor(private tagsService: TagsService, private apiUtility: APIUtilityService) { }
 
   ngOnInit(): void {
-    this.apiService.listTags().subscribe({
+    this.tagsService.listTags().subscribe({
       next: tags => {
         this.allTags = tags
       },

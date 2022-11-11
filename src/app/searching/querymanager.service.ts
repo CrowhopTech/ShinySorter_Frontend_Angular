@@ -3,7 +3,7 @@ import { EventEmitter, Injectable, Output } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SearchMode, FileQuery } from '../filequery';
-import { DefaultService as ShinySorterService, FileEntry } from 'angular-client';
+import { DefaultService as ShinySorterService, FileEntry, FilesService } from 'angular-client';
 import { APIUtilityService } from '../apiutility.service';
 
 const includeTagsParam = "includeTags"
@@ -105,7 +105,7 @@ export class QueryManagerService {
     this.router.navigate(["/search"])
   }
 
-  constructor(private router: Router, private route: ActivatedRoute, private apiService: ShinySorterService, private apiUtility: APIUtilityService) {
+  constructor(private router: Router, private route: ActivatedRoute, private filesService: FilesService, private apiUtility: APIUtilityService) {
     this._query = new FileQuery([], [], "all", "all", true)
     this._viewingFileID = ""
     this._viewingFile = undefined
@@ -126,7 +126,7 @@ export class QueryManagerService {
       this._query = newQuery
       this._viewingFileID = viewingFile ? viewingFile : ""
       if (this._viewingFileID != "") {
-        this.apiService.getFileById(this.viewingFileID).subscribe(f => this._viewingFile = f)
+        this.filesService.getFileById(this.viewingFileID).subscribe(f => this._viewingFile = f)
       }
 
       if (this._searchSubscription) {
@@ -134,7 +134,7 @@ export class QueryManagerService {
       }
       this._searchResult = undefined
       this._searchError = undefined
-      this._searchSubscription = this.apiService.listFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true).subscribe({
+      this._searchSubscription = this.filesService.listFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true).subscribe({
         next: (files: FileEntry[]) => {
           this._searchResult = files
           this._searchError = undefined

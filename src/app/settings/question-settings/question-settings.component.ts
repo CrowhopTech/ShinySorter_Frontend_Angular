@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DefaultService as ShinySorterService, QuestionCreate, QuestionEntry, QuestionPatch, TagEntry } from 'angular-client';
+import { DefaultService as ShinySorterService, QuestionCreate, QuestionEntry, QuestionPatch, QuestionsService, TagEntry, TagsService } from 'angular-client';
 import { combineLatest } from 'rxjs';
 import { QuestionEditDialogComponent } from './question-edit-dialog/question-edit-dialog.component';
 
@@ -24,15 +24,15 @@ export class QuestionSettingsComponent implements OnInit {
     return ids
   }
 
-  constructor(private apiService: ShinySorterService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
+  constructor(private questionsService: QuestionsService, private tagsService: TagsService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.refreshQuestions()
   }
 
   refreshQuestions() {
-    const listQuestions = this.apiService.listQuestions()
-    const listTags = this.apiService.listTags()
+    const listQuestions = this.questionsService.listQuestions()
+    const listTags = this.tagsService.listTags()
     combineLatest([listQuestions, listTags]).subscribe(entry => {
       this.questions = entry[0]
 
@@ -56,7 +56,7 @@ export class QuestionSettingsComponent implements OnInit {
       }
     }).afterClosed().subscribe((result?: QuestionPatch) => {
       if (result) {
-        this.apiService.createQuestion({
+        this.questionsService.createQuestion({
           questionText: result.questionText ? result.questionText : "",
           orderingID: result.orderingID ? result.orderingID : -1,
           mutuallyExclusive: result.mutuallyExclusive ? (result.mutuallyExclusive == QuestionPatch.MutuallyExclusiveEnum.True) : false,
@@ -72,7 +72,7 @@ export class QuestionSettingsComponent implements OnInit {
   }
 
   updateQuestion(id: number, $event: QuestionPatch) {
-    this.apiService.patchQuestionByID(id, $event).subscribe(_ => {
+    this.questionsService.patchQuestionByID(id, $event).subscribe(_ => {
       this.refreshQuestions()
       this.snackbar.open("Question updated successfully", undefined, {
         duration: 3000
@@ -81,7 +81,7 @@ export class QuestionSettingsComponent implements OnInit {
   }
 
   deleteQuestion(id: number) {
-    this.apiService.deleteQuestion(id).subscribe(_ => {
+    this.questionsService.deleteQuestion(id).subscribe(_ => {
       this.refreshQuestions()
       this.snackbar.open("Question deleted successfully", undefined, {
         duration: 3000
@@ -90,7 +90,7 @@ export class QuestionSettingsComponent implements OnInit {
   }
 
   reorderQuestions(newOrder: number[]) {
-    this.apiService.reorderQuestions(newOrder).subscribe(_ => {
+    this.questionsService.reorderQuestions(newOrder).subscribe(_ => {
       this.refreshQuestions()
       this.snackbar.open("Question reordered successfully", undefined, {
         duration: 3000
@@ -127,10 +127,10 @@ export class QuestionReorderDialogComponent implements OnInit {
 
   selectedQuestionIndex: number = -1
 
-  constructor(public dialogRef: MatDialogRef<QuestionReorderDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { reorderQuestion: QuestionEntry }, private apiServer: ShinySorterService) { }
+  constructor(public dialogRef: MatDialogRef<QuestionReorderDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { reorderQuestion: QuestionEntry }, private questionsService: QuestionsService) { }
 
   ngOnInit(): void {
-    this.apiServer.listQuestions().subscribe({
+    this.questionsService.listQuestions().subscribe({
       next: questions => {
         this.questions = questions
         this.questionsBackup = questions

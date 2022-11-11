@@ -3,7 +3,7 @@ import { Component, EventEmitter, Inject, Input, OnInit, Output } from '@angular
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { DefaultService as ShinySorterService, QuestionEntry, QuestionPatch, TagEntry, TagOption, TagPatch } from 'angular-client';
+import { DefaultService as ShinySorterService, QuestionEntry, QuestionPatch, TagEntry, TagOption, TagPatch, TagsService } from 'angular-client';
 import { APIUtilityService } from 'src/app/apiutility.service';
 
 @Component({
@@ -18,7 +18,7 @@ export class QuestionEditDialogComponent implements OnInit {
 
   boolToStr = (b: boolean) => b ? 'true' : 'false'
 
-  constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionEntry }, private apiService: ShinySorterService, public apiUtility: APIUtilityService) {
+  constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionEntry }, private tagsService: TagsService, public apiUtility: APIUtilityService) {
     this.questionCopy = {
       mutuallyExclusive: data.question.mutuallyExclusive ? "true" : "false",
       orderingID: data.question.orderingID,
@@ -30,7 +30,7 @@ export class QuestionEditDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.apiUtility.updateTagCache()
-    this.apiService.listTags().subscribe(tags => {
+    this.tagsService.listTags().subscribe(tags => {
       this.tags = tags
     })
   }
