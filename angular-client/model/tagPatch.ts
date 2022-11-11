@@ -12,7 +12,6 @@
 
 
 export interface TagPatch { 
-    name?: string;
     userFriendlyName?: string;
     description?: string;
 }

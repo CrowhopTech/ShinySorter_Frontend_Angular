@@ -12,7 +12,6 @@
 
 
 export interface TagCreate { 
-    name: string;
     userFriendlyName: string;
     description: string;
 }

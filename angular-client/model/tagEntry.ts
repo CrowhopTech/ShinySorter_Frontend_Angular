@@ -13,7 +13,6 @@
 
 export interface TagEntry { 
     id: number;
-    name: string;
     userFriendlyName: string;
     description: string;
 }

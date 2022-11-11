@@ -33,8 +33,7 @@ export class TagCreateTileComponent implements OnInit {
 
     this.apiService.createTag({
       userFriendlyName: this.newName,
-      description: this.newDescription,
-      name: this.newName.toLowerCase().replace(" ", "-")
+      description: this.newDescription
     }).subscribe(_ => {
       this.editing = false
       this.savePending = false
