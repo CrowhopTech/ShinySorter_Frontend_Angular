@@ -29,9 +29,17 @@
             </div>
         </div>
         <div class="flex-grow-0 flex flex-col-reverse">
-            <button mat-button (click)="editQuestion()">
-                Edit Question
-            </button>
+            <div class="flex flex-col">
+                <button mat-button (click)="editQuestion()" class="text-left">
+                    <mat-icon>edit</mat-icon> Edit Question
+                </button>
+                <button mat-button class="text-left" (click)="showReorderDialog()">
+                    <mat-icon>low_priority</mat-icon> Reorder Question
+                </button>
+                <button mat-button class="text-left" (click)="showDeleteDialog()">
+                    <mat-icon>delete</mat-icon> Delete Question
+                </button>
+            </div>
         </div>
     </div>
 </mat-expansion-panel>

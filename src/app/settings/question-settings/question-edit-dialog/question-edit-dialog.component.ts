@@ -12,7 +12,6 @@ import { APIUtilityService } from 'src/app/apiutility.service';
   styleUrls: ['./question-edit-dialog.component.sass']
 })
 export class QuestionEditDialogComponent implements OnInit {
-  private _questionID: number
   public questionCopy: QuestionPatch
   public mutexString = ""
   public tags?: TagEntry[]
@@ -20,7 +19,6 @@ export class QuestionEditDialogComponent implements OnInit {
   boolToStr = (b: boolean) => b ? 'true' : 'false'
 
   constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionEntry }, private apiService: ShinySorterService, public apiUtility: APIUtilityService) {
-    this._questionID = data.question.questionID
     this.questionCopy = {
       mutuallyExclusive: data.question.mutuallyExclusive ? "true" : "false",
       orderingID: data.question.orderingID,

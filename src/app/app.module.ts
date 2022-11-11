@@ -39,7 +39,7 @@ import { AppService } from './app.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { SettingsComponent } from './settings/settings.component';
 import { TagSettingsComponent } from './settings/tag-settings/tag-settings.component';
-import { QuestionSettingsComponent } from './settings/question-settings/question-settings.component';
+import { QuestionSettingsComponent, QuestionDeleteDialogComponent, QuestionReorderDialogComponent } from './settings/question-settings/question-settings.component';
 import { ApiModule, Configuration } from 'angular-client';
 import { TagTileComponent } from './settings/tag-settings/tag-tile/tag-tile.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -83,7 +83,9 @@ export function getApiConfig() {
     TagDeleteDialogComponent,
     QuestionTileComponent,
     QuestionEditDialogComponent,
-    TagOptionEditComponent
+    TagOptionEditComponent,
+    QuestionDeleteDialogComponent,
+    QuestionReorderDialogComponent
   ],
   imports: [
     BrowserModule,

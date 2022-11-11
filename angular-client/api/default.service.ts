@@ -728,6 +728,56 @@ export class DefaultService {
 
     /**
      * 
+     * Reorders all questions (requires all question IDs to be passed in, e.g. a complete order)
+     * @param newOrder The new order of the questions
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public reorderQuestions(newOrder: Array<number>, observe?: 'body', reportProgress?: boolean): Observable<any>;
+    public reorderQuestions(newOrder: Array<number>, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<any>>;
+    public reorderQuestions(newOrder: Array<number>, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<any>>;
+    public reorderQuestions(newOrder: Array<number>, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
+
+        if (newOrder === null || newOrder === undefined) {
+            throw new Error('Required parameter newOrder was null or undefined when calling reorderQuestions.');
+        }
+
+        let queryParameters = new HttpParams({encoder: new CustomHttpUrlEncodingCodec()});
+        if (newOrder) {
+            queryParameters = queryParameters.set('newOrder', newOrder.join(COLLECTION_FORMATS['csv']));
+        }
+
+        let headers = this.defaultHeaders;
+
+        // to determine the Accept header
+        let httpHeaderAccepts: string[] = [
+            'application/json'
+        ];
+        const httpHeaderAcceptSelected: string | undefined = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        if (httpHeaderAcceptSelected != undefined) {
+            headers = headers.set('Accept', httpHeaderAcceptSelected);
+        }
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json',
+            'multipart/form-data'
+        ];
+
+        return this.httpClient.post<any>(`${this.basePath}/questions/reorder`,
+            null,
+            {
+                params: queryParameters,
+                withCredentials: this.configuration.withCredentials,
+                headers: headers,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * 
      * Sets the file contents for the specified id
      * @param id File ID
      * @param fileContents The file contents to upload.

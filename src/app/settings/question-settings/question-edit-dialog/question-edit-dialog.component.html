@@ -39,6 +39,10 @@
         <mat-icon>add</mat-icon>Add option
     </button>
     <div class="flex-grow"></div>
-    <button mat-button [mat-dialog-close]="undefined" cdkFocusInitial>Cancel</button>
-    <button mat-button [mat-dialog-close]="questionCopy">Save</button>
+    <button mat-button [mat-dialog-close]="undefined" cdkFocusInitial>
+        <mat-icon>cancel</mat-icon> Cancel
+    </button>
+    <button mat-button [mat-dialog-close]="questionCopy">
+        <mat-icon>save</mat-icon> Save
+    </button>
 </mat-dialog-actions>
