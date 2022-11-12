@@ -11,8 +11,9 @@
  */
 
 
-export interface FileEntry { 
-    id: string;
+export interface FileEntry {
+    _id: string;
+    name: string
     md5sum: string;
     tags: Array<number>;
     hasBeenTagged: boolean;

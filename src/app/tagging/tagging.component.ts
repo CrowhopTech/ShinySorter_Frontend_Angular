@@ -60,16 +60,21 @@ export class TaggingComponent implements OnInit {
         return
       }
 
+      console.log("Getting random image")
+
       // Handle if we need to pick a new image
       this.apiUtility.getRandomUntaggedFile().subscribe({
         next: untaggedFile => {
+          console.log("Got random image")
           this.navigateError = undefined
           if (untaggedFile === null) {
             this.noMoreFiles = true
             return
           }
 
-          this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile.id } })
+          console.log(`Setting image to ${untaggedFile._id}`)
+
+          this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile._id } })
         },
         error: (err: any) => {
           if (err instanceof HttpErrorResponse) {

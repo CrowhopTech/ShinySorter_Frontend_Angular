@@ -45,7 +45,7 @@
             <mat-grid-list *ngIf="queryManager.searchResult != undefined" cols="4" rowHeight="256">
                 <mat-grid-tile *ngFor="let file of queryManager.searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"
-                        [src]="apiUtility.getFileThumbAddress(file.id)" (click)="queryManager.viewFile(file.id)" />
+                        [src]="apiUtility.getFileThumbAddress(file._id)" (click)="queryManager.viewFile(file._id)" />
                 </mat-grid-tile>
             </mat-grid-list>
         </mat-sidenav-content>
