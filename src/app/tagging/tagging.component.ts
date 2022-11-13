@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { APIUtilityService } from '../apiutility.service';
 import { QuestionManagerService } from './questionmanager.service';
-import { DefaultService as ShinySorterService } from 'angular-client';
 
 @Component({
   selector: 'app-tagging',
@@ -14,7 +13,7 @@ export class TaggingComponent implements OnInit {
   noMoreFiles: boolean = false
   navigateError: string | undefined = undefined
 
-  constructor(public router: Router, private route: ActivatedRoute, public apiService: ShinySorterService, public apiUtility: APIUtilityService, public questionManager: QuestionManagerService) { }
+  constructor(public router: Router, private route: ActivatedRoute, public apiUtility: APIUtilityService, public questionManager: QuestionManagerService) { }
 
   pastelColorForText(text: string | undefined): string {
     if (!text) {
@@ -60,19 +59,14 @@ export class TaggingComponent implements OnInit {
         return
       }
 
-      console.log("Getting random image")
-
       // Handle if we need to pick a new image
       this.apiUtility.getRandomUntaggedFile().subscribe({
         next: untaggedFile => {
-          console.log("Got random image")
           this.navigateError = undefined
           if (untaggedFile === null) {
             this.noMoreFiles = true
             return
           }
-
-          console.log(`Setting image to ${untaggedFile._id}`)
 
           this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile._id } })
         },

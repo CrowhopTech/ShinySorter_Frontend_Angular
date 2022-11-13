@@ -1,9 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DefaultService as ShinySorterService, TagEntry, TagsService } from 'angular-client';
-import { interval, timer } from 'rxjs';
+import { TagEntry, TagsService } from 'angular-client';
 import { TagDeleteDialogComponent } from '../tag-delete-dialog/tag-delete-dialog.component';
 
 @Component({

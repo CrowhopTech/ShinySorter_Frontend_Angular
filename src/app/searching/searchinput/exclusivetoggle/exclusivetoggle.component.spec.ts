@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { ExclusivetoggleComponent } from './exclusivetoggle.component';
 
@@ -8,9 +9,10 @@ describe('ExclusivetoggleComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ExclusivetoggleComponent ]
+      declarations: [ExclusivetoggleComponent],
+      imports: [MatSlideToggleModule]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(ExclusivetoggleComponent);
     component = fixture.componentInstance;

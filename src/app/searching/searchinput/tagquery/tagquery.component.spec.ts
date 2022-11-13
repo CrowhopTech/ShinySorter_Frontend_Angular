@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 import { TagqueryComponent } from './tagquery.component';
 
@@ -8,9 +10,10 @@ describe('TagqueryComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TagqueryComponent ]
+      declarations: [TagqueryComponent],
+      imports: [MatButtonModule, MatIconModule]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(TagqueryComponent);
     component = fixture.componentInstance;

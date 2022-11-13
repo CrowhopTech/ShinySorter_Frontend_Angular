@@ -1,4 +1,15 @@
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { RouterModule } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
+import { ApiModule } from 'angular-client';
+import { AppModule } from '../app.module';
 
 import { TaggingComponent } from './tagging.component';
 
@@ -8,9 +19,22 @@ describe('TaggingComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TaggingComponent ]
+      declarations: [TaggingComponent],
+      imports: [
+        ApiModule,
+        HttpClientModule,
+        RouterModule,
+        RouterTestingModule,
+        MatProgressSpinnerModule,
+        MatToolbarModule,
+        MatRadioModule,
+        MatCheckboxModule,
+        MatButtonModule,
+        MatIconModule,
+        AppModule
+      ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(TaggingComponent);
     component = fixture.componentInstance;

@@ -1,4 +1,12 @@
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { ApiModule } from 'angular-client';
 
 import { TagCreateTileComponent } from './tag-create-tile.component';
 
@@ -8,7 +16,17 @@ describe('TagCreateTileComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [TagCreateTileComponent]
+      declarations: [TagCreateTileComponent],
+      imports: [
+        ApiModule,
+        HttpClientModule,
+        MatFormFieldModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
+        MatButtonModule,
+        MatIconModule,
+        MatCardModule
+      ]
     })
       .compileComponents();
 

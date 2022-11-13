@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnInit } from '@angular/core';
-import { DefaultService as ShinySorterService, FileEntry, FilesService } from 'angular-client';
+import { FileEntry, FilesService } from 'angular-client';
 import { APIUtilityService } from '../apiutility.service';
 
 export type FileType = "image" | "video" | "unknown"

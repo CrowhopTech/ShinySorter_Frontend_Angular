@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
-import { DefaultService as ShinySorterService, FileEntry, FilesService, QuestionEntry, QuestionsService } from 'angular-client';
+import { FileEntry, FilesService, QuestionEntry, QuestionsService } from 'angular-client';
 
 const imageParam = "image"
 const selectedTagsParam = "selectedTags"
@@ -159,7 +159,6 @@ export class QuestionManagerService {
     const lastQuestion = this._questions[this._questions.length - 1]
 
     if (lastQuestion.orderingID && this._orderingID > lastQuestion.orderingID) {
-      console.log("Patching file")
       // If we're past the end, let's save this file
       // TODO: gracefully handle errors on tagging!
       // TODO: move this to an external event handler?

@@ -1,4 +1,9 @@
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { ApiModule } from 'angular-client';
 
 import { SearchinputComponent } from './searchinput.component';
 
@@ -8,9 +13,16 @@ describe('SearchinputComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ SearchinputComponent ]
+      declarations: [SearchinputComponent],
+      imports: [
+        ApiModule,
+        HttpClientModule,
+        MatButtonModule,
+        MatIconModule,
+        MatSlideToggleModule
+      ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(SearchinputComponent);
     component = fixture.componentInstance;
