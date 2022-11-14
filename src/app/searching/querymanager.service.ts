@@ -12,6 +12,8 @@ const includeModeParam = "includeMode"
 const excludeModeParam = "excludeMode"
 const viewingFileParam = "view"
 
+const pageSize = 10
+
 @Injectable({
   providedIn: 'root'
 })
@@ -53,6 +55,7 @@ export class QueryManagerService {
   private _searchResult: FileEntry[] | undefined = undefined
   private _searchSubscription: Subscription | null = null
   private _searchError: string | undefined = undefined
+  private _noMoreResults: boolean = false
 
   public get query(): FileQuery {
     return this._query;
@@ -72,6 +75,10 @@ export class QueryManagerService {
 
   public get searchError(): string | undefined {
     return this._searchError
+  }
+
+  public get noMoreResults(): boolean {
+    return this._noMoreResults
   }
 
   public navigateToQuery(query: FileQuery) {
@@ -105,6 +112,65 @@ export class QueryManagerService {
     this.router.navigate(["/search"])
   }
 
+  public getMoreResults() {
+    if (this.searchRequestInFlight()) {
+      return
+    }
+    if (!this._searchResult || this._searchError != undefined) {
+      return
+    }
+
+    const cont = this._searchResult[this._searchResult.length - 1].id
+
+    this.listFileCall(cont, true)
+  }
+
+  public searchRequestInFlight() {
+    return this._searchSubscription && !this._searchSubscription.closed
+  }
+
+  listFileCall(cont?: string, append: boolean = false) {
+    if (this._searchSubscription) {
+      this._searchSubscription.unsubscribe()
+    }
+    if (!append) {
+      this._searchResult = undefined
+      this._noMoreResults = false
+    }
+    this._searchError = undefined
+    this._searchSubscription = this.filesService.listFiles(
+      this.query.includeTags,
+      this.query.includeMode,
+      this.query.excludeTags,
+      this.query.excludeMode,
+      true,
+      pageSize,
+      cont != undefined && cont.length > 0 ? cont : undefined
+    ).subscribe({
+      next: (files: FileEntry[]) => {
+        if (append) {
+          if (files.length == 0) {
+            this._noMoreResults = true
+          }
+          files.forEach(f => this._searchResult?.push(f))
+        } else {
+          this._searchResult = files
+        }
+        this._searchError = undefined
+        this.searchResultReady.emit()
+      },
+      error: (err: any) => {
+        this._searchResult = []
+        if (err instanceof HttpErrorResponse) {
+          this._searchError = err.message
+        } else {
+          this._searchError = err.toString()
+        }
+        this.searchResultReady.error(this._searchError)
+      }
+    })
+  }
+
   constructor(private router: Router, private route: ActivatedRoute, private filesService: FilesService, private apiUtility: APIUtilityService) {
     this._query = new FileQuery([], [], "all", "all", true)
     this._viewingFileID = ""
@@ -128,28 +194,7 @@ export class QueryManagerService {
       if (this._viewingFileID != "") {
         this.filesService.getFileById(this.viewingFileID).subscribe(f => this._viewingFile = f)
       }
-
-      if (this._searchSubscription) {
-        this._searchSubscription.unsubscribe()
-      }
-      this._searchResult = undefined
-      this._searchError = undefined
-      this._searchSubscription = this.filesService.listFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true).subscribe({
-        next: (files: FileEntry[]) => {
-          this._searchResult = files
-          this._searchError = undefined
-          this.searchResultReady.emit()
-        },
-        error: (err: any) => {
-          this._searchResult = []
-          if (err instanceof HttpErrorResponse) {
-            this._searchError = err.message
-          } else {
-            this._searchError = err.toString()
-          }
-          this.searchResultReady.error(this._searchError)
-        }
-      })
+      this.listFileCall("")
     })
   }
 }

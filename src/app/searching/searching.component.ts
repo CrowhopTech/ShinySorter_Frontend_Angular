@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DefaultService as ShinySorterService } from 'angular-client';
 import { distinctUntilChanged, filter, fromEvent, map } from 'rxjs';
 import { APIUtilityService } from '../apiutility.service';
 import { QueryManagerService } from './querymanager.service';
@@ -13,7 +12,7 @@ import { QueryManagerService } from './querymanager.service';
 export class SearchingComponent implements OnInit {
   viewerInfoOpen: boolean = false
 
-  constructor(public router: Router, public queryManager: QueryManagerService, private apiService: ShinySorterService, public apiUtility: APIUtilityService) { }
+  constructor(public router: Router, public queryManager: QueryManagerService, public apiUtility: APIUtilityService) { }
 
   ngOnInit(): void {
     this.apiUtility.updateTagCache()

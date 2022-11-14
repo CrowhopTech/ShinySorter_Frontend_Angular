@@ -15,7 +15,8 @@ export class FileQuery {
     public excludeTags: number[],
     public includeMode: SearchMode,
     public excludeMode: SearchMode,
-    public hasBeenTagged: boolean) { }
+    public hasBeenTagged: boolean,
+    public continueID: string = "") { }
 
   public httpParams(): HttpParams {
     let params = new HttpParams();

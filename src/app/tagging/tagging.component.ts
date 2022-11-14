@@ -68,7 +68,7 @@ export class TaggingComponent implements OnInit {
             return
           }
 
-          this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile._id } })
+          this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile.id } })
         },
         error: (err: any) => {
           if (err instanceof HttpErrorResponse) {

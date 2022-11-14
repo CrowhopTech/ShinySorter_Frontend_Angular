@@ -18,7 +18,6 @@ import { CustomHttpUrlEncodingCodec }                        from '../encoder';
 
 import { Observable }                                        from 'rxjs';
 
-import { FileCreate } from '../model/fileCreate';
 import { FileEntry } from '../model/fileEntry';
 import { FilePatch } from '../model/filePatch';
 
@@ -61,22 +60,17 @@ export class FilesService {
     /**
      * 
      * Creates a new file entry
-     * @param id File ID
-     * @param newFile The new file to create
+     * @param id File name
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createFile(id: string, newFile: FileCreate, observe?: 'body', reportProgress?: boolean): Observable<FileEntry>;
-    public createFile(id: string, newFile: FileCreate, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<FileEntry>>;
-    public createFile(id: string, newFile: FileCreate, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<FileEntry>>;
-    public createFile(id: string, newFile: FileCreate, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
+    public createFile(id: string, observe?: 'body', reportProgress?: boolean): Observable<FileEntry>;
+    public createFile(id: string, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<FileEntry>>;
+    public createFile(id: string, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<FileEntry>>;
+    public createFile(id: string, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
 
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling createFile.');
-        }
-
-        if (newFile === null || newFile === undefined) {
-            throw new Error('Required parameter newFile was null or undefined when calling createFile.');
         }
 
         let headers = this.defaultHeaders;
@@ -95,13 +89,9 @@ export class FilesService {
             'application/json',
             'multipart/form-data'
         ];
-        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
-        if (httpContentTypeSelected != undefined) {
-            headers = headers.set('Content-Type', httpContentTypeSelected);
-        }
 
         return this.httpClient.post<FileEntry>(`${this.basePath}/files/${encodeURIComponent(String(id))}`,
-            newFile,
+            null,
             {
                 withCredentials: this.configuration.withCredentials,
                 headers: headers,
@@ -213,13 +203,17 @@ export class FilesService {
      * @param excludeTags Tags to exclude in this query, referenced by tag ID
      * @param excludeOperator Whether excludeTags requires all tags to match, or just one
      * @param hasBeenTagged Whether to filter to tags that have or have not been tagged
+     * @param limit The count of results to return (aka page size)
+     * @param _continue The last object ID of the previous page
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, observe?: 'body', reportProgress?: boolean): Observable<Array<FileEntry>>;
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<Array<FileEntry>>>;
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<Array<FileEntry>>>;
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe?: 'body', reportProgress?: boolean): Observable<Array<FileEntry>>;
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<Array<FileEntry>>>;
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<Array<FileEntry>>>;
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
+
+
 
 
 
@@ -241,6 +235,12 @@ export class FilesService {
         }
         if (hasBeenTagged !== undefined && hasBeenTagged !== null) {
             queryParameters = queryParameters.set('hasBeenTagged', <any>hasBeenTagged);
+        }
+        if (limit !== undefined && limit !== null) {
+            queryParameters = queryParameters.set('limit', <any>limit);
+        }
+        if (_continue !== undefined && _continue !== null) {
+            queryParameters = queryParameters.set('continue', <any>_continue);
         }
 
         let headers = this.defaultHeaders;

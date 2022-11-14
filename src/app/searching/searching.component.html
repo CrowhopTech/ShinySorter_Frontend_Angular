@@ -45,9 +45,18 @@
             <mat-grid-list *ngIf="queryManager.searchResult != undefined" cols="4" rowHeight="256">
                 <mat-grid-tile *ngFor="let file of queryManager.searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"
-                        [src]="apiUtility.getFileThumbAddress(file._id)" (click)="queryManager.viewFile(file._id)" />
+                        [src]="apiUtility.getFileThumbAddress(file.id)" (click)="queryManager.viewFile(file.id)" />
                 </mat-grid-tile>
             </mat-grid-list>
+            <button
+                *ngIf="!queryManager.searchRequestInFlight() && queryManager.searchResult != undefined && queryManager.searchResult.length > 0 && queryManager.searchError == undefined && !queryManager.noMoreResults"
+                mat-flat-button class="m-1" color="primary" (click)="queryManager.getMoreResults()">
+                Load More Results
+                <mat-icon>expand_more</mat-icon>
+            </button>
+            <h1
+                *ngIf="!queryManager.searchRequestInFlight() && queryManager.searchError == undefined && queryManager.noMoreResults">
+                No more results</h1>
         </mat-sidenav-content>
     </mat-sidenav-container>
 </div>
