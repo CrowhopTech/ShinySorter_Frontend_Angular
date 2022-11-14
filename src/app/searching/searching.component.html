@@ -33,7 +33,10 @@
             <mat-divider></mat-divider>
         </mat-sidenav>
         <mat-sidenav-content class="p-3">
-            <h1>Results</h1>
+            <div class="flex flex-row items-end">
+                <h1>Results</h1>
+                <h3 *ngIf="queryManager.resultsCount != undefined" class="ml-1.5">({{ queryManager.resultsCount }})</h3>
+            </div>
             <mat-spinner *ngIf="queryManager.searchResult === undefined" diameter="50"></mat-spinner>
             <h2
                 *ngIf="queryManager.searchError === undefined && queryManager.searchResult !== undefined && queryManager.searchResult.length == 0">

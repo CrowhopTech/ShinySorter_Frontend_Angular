@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -54,7 +54,8 @@ export class QueryManagerService {
 
   private _searchResult: FileEntry[] | undefined = undefined
   private _searchSubscription: Subscription | null = null
-  private _searchError: string | undefined = undefined
+  private _searchError?: string
+  private _resultsCount?: number
   private _noMoreResults: boolean = false
 
   public get query(): FileQuery {
@@ -79,6 +80,10 @@ export class QueryManagerService {
 
   public get noMoreResults(): boolean {
     return this._noMoreResults
+  }
+
+  public get resultsCount(): number | undefined {
+    return this._resultsCount
   }
 
   public navigateToQuery(query: FileQuery) {
@@ -136,6 +141,7 @@ export class QueryManagerService {
     if (!append) {
       this._searchResult = undefined
       this._noMoreResults = false
+      this._resultsCount = undefined
     }
     this._searchError = undefined
     this._searchSubscription = this.filesService.listFiles(
@@ -145,9 +151,27 @@ export class QueryManagerService {
       this.query.excludeMode,
       true,
       pageSize,
-      cont != undefined && cont.length > 0 ? cont : undefined
+      cont != undefined && cont.length > 0 ? cont : undefined,
+      "response"
     ).subscribe({
-      next: (files: FileEntry[]) => {
+      next: (resp: HttpResponse<FileEntry[]>) => {
+        if (!resp.body) {
+          return
+        }
+        const files = resp.body
+
+        console.log(resp.headers.keys())
+
+        if (resp.headers.has("X-Filecount")) {
+          const paramVal = resp.headers.get("X-Filecount")
+          if (paramVal && paramVal != "") {
+            const countParam = parseInt(paramVal)
+            if (countParam > -1) {
+              this._resultsCount = countParam
+            }
+          }
+        }
+
         if (append) {
           if (files.length == 0) {
             this._noMoreResults = true
