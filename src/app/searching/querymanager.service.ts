@@ -12,7 +12,7 @@ const includeModeParam = "includeMode"
 const excludeModeParam = "excludeMode"
 const viewingFileParam = "view"
 
-const pageSize = 10
+const pageSize = 16
 
 @Injectable({
   providedIn: 'root'
@@ -159,8 +159,6 @@ export class QueryManagerService {
           return
         }
         const files = resp.body
-
-        console.log(resp.headers.keys())
 
         if (resp.headers.has("X-Filecount")) {
           const paramVal = resp.headers.get("X-Filecount")

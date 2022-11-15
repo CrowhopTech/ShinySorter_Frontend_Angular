@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { APIUtilityService } from '../apiutility.service';
 import { QuestionManagerService } from './questionmanager.service';
 
@@ -12,6 +13,7 @@ import { QuestionManagerService } from './questionmanager.service';
 export class TaggingComponent implements OnInit {
   noMoreFiles: boolean = false
   navigateError: string | undefined = undefined
+  stopListening = false
 
   constructor(public router: Router, private route: ActivatedRoute, public apiUtility: APIUtilityService, public questionManager: QuestionManagerService) { }
 
@@ -49,8 +51,17 @@ export class TaggingComponent implements OnInit {
     this.router.navigate(["/tag"])
   }
 
+  toolbarNavigate(path: string) {
+    this.stopListening = true
+    this.router.navigate([path])
+  }
+
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
+      if (this.stopListening) {
+        return
+      }
+
       const image = params.get("image")
 
       if (image != null && image != "") {
