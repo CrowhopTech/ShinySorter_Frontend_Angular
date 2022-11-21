@@ -1,6 +1,14 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
     <div id="image-viewer-root" class="w-full h-full fixed" *ngIf="queryManager.viewingFileID != ''">
+        <button *ngIf="queryManager.viewCanGoBack()" class="viewer-button absolute left-0 top-16 bottom-0 w-12"
+            (click)="queryManager.viewLastFile()">
+            <mat-icon class="navbutton-icon">chevron_left</mat-icon>
+        </button>
+        <button *ngIf="queryManager.viewCanGoForward()" class="viewer-button absolute right-0 top-16 bottom-0 w-12"
+            (click)="queryManager.viewNextFile()">
+            <mat-icon class="navbutton-icon">chevron_right</mat-icon>
+        </button>
         <button mat-icon-button disableRipple class="viewer-button absolute right-2 top-2"
             (click)="queryManager.viewClose()">
             <mat-icon>close</mat-icon>

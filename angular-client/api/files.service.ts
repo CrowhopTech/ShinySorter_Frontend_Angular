@@ -203,16 +203,14 @@ export class FilesService {
      * @param excludeTags Tags to exclude in this query, referenced by tag ID
      * @param excludeOperator Whether excludeTags requires all tags to match, or just one
      * @param hasBeenTagged Whether to filter to tags that have or have not been tagged
-     * @param limit The count of results to return (aka page size)
-     * @param _continue The last object ID of the previous page
+     * @param page The page to access
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe?: 'body', reportProgress?: boolean): Observable<Array<FileEntry>>;
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<Array<FileEntry>>>;
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<Array<FileEntry>>>;
-    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, limit?: number, _continue?: string, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
-
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, page?: number, observe?: 'body', reportProgress?: boolean): Observable<Array<FileEntry>>;
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, page?: number, observe?: 'response', reportProgress?: boolean): Observable<HttpResponse<Array<FileEntry>>>;
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, page?: number, observe?: 'events', reportProgress?: boolean): Observable<HttpEvent<Array<FileEntry>>>;
+    public listFiles(includeTags?: Array<number>, includeOperator?: 'all' | 'any', excludeTags?: Array<number>, excludeOperator?: 'all' | 'any', hasBeenTagged?: boolean, page?: number, observe: any = 'body', reportProgress: boolean = false ): Observable<any> {
 
 
 
@@ -236,11 +234,8 @@ export class FilesService {
         if (hasBeenTagged !== undefined && hasBeenTagged !== null) {
             queryParameters = queryParameters.set('hasBeenTagged', <any>hasBeenTagged);
         }
-        if (limit !== undefined && limit !== null) {
-            queryParameters = queryParameters.set('limit', <any>limit);
-        }
-        if (_continue !== undefined && _continue !== null) {
-            queryParameters = queryParameters.set('continue', <any>_continue);
+        if (page !== undefined && page !== null) {
+            queryParameters = queryParameters.set('page', <any>page);
         }
 
         let headers = this.defaultHeaders;

@@ -12,7 +12,7 @@ const includeModeParam = "includeMode"
 const excludeModeParam = "excludeMode"
 const viewingFileParam = "view"
 
-const pageSize = 16
+const pageSize = 3
 
 @Injectable({
   providedIn: 'root'
@@ -53,6 +53,7 @@ export class QueryManagerService {
   private _viewingFile: FileEntry | undefined;
 
   private _searchResult: FileEntry[] | undefined = undefined
+  private _searchPage: number = -1
   private _searchSubscription: Subscription | null = null
   private _searchError?: string
   private _resultsCount?: number
@@ -125,16 +126,67 @@ export class QueryManagerService {
       return
     }
 
-    const cont = this._searchResult[this._searchResult.length - 1].id
+    this.listFileCall(true)
+  }
 
-    this.listFileCall(cont, true)
+  public viewCanGoBack(): boolean {
+    if (!this._searchResult) {
+      return false
+    }
+    // Index = -1, not found. Index = 0, first one. All else can go back.
+    return this._searchResult.findIndex(f => f.id == this._viewingFileID) > 0
+  }
+
+  public viewCanGoForward(): boolean {
+    if (!this._searchResult) {
+      return false
+    }
+    const idx = this._searchResult.findIndex(f => f.id == this._viewingFileID)
+    if (idx == -1) {
+      return false
+    }
+    // If we're at the end of our current files, and we already tried to get more
+    // then we really can't go forward. Otherwise, let us try.
+    return idx != this._searchResult.length - 1 || !this._noMoreResults
+  }
+
+  public viewNextFile() {
+    // Get index of current file
+    if (!this._searchResult) {
+      return
+    }
+    const idx = this._searchResult.findIndex(f => f.id == this._viewingFileID)
+    if (idx == -1) {
+      return
+    }
+    if (idx == this._searchResult.length - 1) {
+      this.getMoreResults()
+    }
+    const nextFile = this._searchResult[Math.min(this._searchResult.length - 1, idx + 1)]
+    if (nextFile == undefined) {
+      return
+    }
+    this.viewFile(nextFile.id)
+  }
+
+  public viewLastFile() {
+    // Get index of current file
+    if (!this._searchResult) {
+      return
+    }
+    const idx = this._searchResult.findIndex(f => f.id == this._viewingFileID)
+    if (idx <= 0) {
+      return
+    }
+    const lastFileID = this._searchResult[Math.max(0, idx - 1)].id
+    this.viewFile(lastFileID)
   }
 
   public searchRequestInFlight() {
     return this._searchSubscription && !this._searchSubscription.closed
   }
 
-  listFileCall(cont?: string, append: boolean = false) {
+  listFileCall(append: boolean = false) {
     if (this._searchSubscription) {
       this._searchSubscription.unsubscribe()
     }
@@ -142,6 +194,7 @@ export class QueryManagerService {
       this._searchResult = undefined
       this._noMoreResults = false
       this._resultsCount = undefined
+      this._searchPage = -1
     }
     this._searchError = undefined
     this._searchSubscription = this.filesService.listFiles(
@@ -150,8 +203,7 @@ export class QueryManagerService {
       this.query.excludeTags,
       this.query.excludeMode,
       true,
-      pageSize,
-      cont != undefined && cont.length > 0 ? cont : undefined,
+      this._searchPage + 1,
       "response"
     ).subscribe({
       next: (resp: HttpResponse<FileEntry[]>) => {
@@ -178,6 +230,7 @@ export class QueryManagerService {
         } else {
           this._searchResult = files
         }
+        this._searchPage++
         this._searchError = undefined
         this.searchResultReady.emit()
       },
@@ -216,7 +269,7 @@ export class QueryManagerService {
       if (this._viewingFileID != "") {
         this.filesService.getFileById(this.viewingFileID).subscribe(f => this._viewingFile = f)
       }
-      this.listFileCall("")
+      this.listFileCall(false)
     })
   }
 }
