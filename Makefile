@@ -1,12 +1,13 @@
-docker:
+docker-web:
 	docker build . -t adamukaapan/shinysorter-frontend-angular:latest
 
-docker-push: docker
-	docker push adamukaapan/shinysorter-frontend-angular:latest
+docker-query-server: src/queryserver/**/*
+	cd src/queryserver && docker build . -t adamukaapan/shinysorter-query-server:latest
 
-swagger-client:
-	docker run --rm -v ${PWD}:/local -v ${PWD}/../backend/pkg/swagger/swagger.yaml:/swagger.yaml swaggerapi/swagger-codegen-cli generate \
-	-i /swagger.yaml \
-	-l typescript-angular --additional-properties ngVersion=14 \
-    -o /local/angular-client
-	sudo chown -R adamukaapan:adamukaapan angular-client
+docker-push: docker-web docker-query-server
+	docker push adamukaapan/shinysorter-frontend-angular:latest
+	docker push adamukaapan/shinysorter-query-server:latest
+
+supagen:
+	supabase gen types typescript --local > src/schema.ts
+	cp src/schema.ts queryserver/src/schema.ts

@@ -14,7 +14,12 @@ export class SearchingComponent implements OnInit {
 
   constructor(public router: Router, public queryManager: QueryManagerService, public apiUtility: APIUtilityService) { }
 
-  ngOnInit(): void {
+  get currentFileTags(): number[] | undefined {
+    return this.queryManager.viewingFile?.filetags.map(t => t.tagid)
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.queryManager.ngOnInit()
     this.apiUtility.updateTagCache()
 
     fromEvent(document, 'keydown').
@@ -24,7 +29,7 @@ export class SearchingComponent implements OnInit {
         distinctUntilChanged(),
         filter((e: KeyboardEvent) => e.key == "Escape")).
       subscribe((_: KeyboardEvent) => {
-        if (this.queryManager.viewingFileID != "") {
+        if (this.queryManager.viewingFileID != -1) {
           this.queryManager.viewClose()
         }
       })

@@ -1,9 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { throwToolbarMixedModesError } from '@angular/material/toolbar';
-import { DefaultService as ShinySorterService, TagEntry, TagsService } from 'angular-client';
-import { interval, timer } from 'rxjs';
+import { SupabaseService } from 'src/app/supabase.service';
 
 @Component({
   selector: 'app-tag-create-tile',
@@ -20,25 +17,27 @@ export class TagCreateTileComponent implements OnInit {
   editing: boolean = false
   savePending: boolean = false // Set to true when we start the tag create call, set to false once it finishes
 
-  constructor(private tagsService: TagsService, private snackbar: MatSnackBar) { }
+  constructor(private supaService: SupabaseService, private snackbar: MatSnackBar) { }
 
   ngOnInit(): void { }
 
-  submitChanges() {
+  async submitChanges() {
     if (this.newName == undefined || this.newDescription == undefined || this.newName.length == 0) {
       return
     }
 
     this.savePending = true
 
-    this.tagsService.createTag({
-      userFriendlyName: this.newName,
-      description: this.newDescription
-    }).subscribe(_ => {
-      this.editing = false
-      this.savePending = false
-      this.refetchRequired.emit()
-      this.snackbar.open(`Tag '${this.newName}' created successfully`, undefined, { duration: 3000 })
+    const { error } = await this.supaService.createTag({
+      name: this.newName,
+      description: this.newDescription,
     })
+    if (error) {
+      throw error
+    }
+    this.editing = false
+    this.savePending = false
+    this.refetchRequired.emit()
+    this.snackbar.open(`Tag '${this.newName}' created successfully`, undefined, { duration: 3000 })
   }
 }

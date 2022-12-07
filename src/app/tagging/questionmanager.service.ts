@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { combineLatest, Subscription } from 'rxjs';
-import { FileEntry, FilesService, QuestionEntry, QuestionsService } from 'angular-client';
+import { Subscription } from 'rxjs';
+import { Question, QuestionWithOptions, SupabaseService, TaggedFileEntry } from '../supabase.service';
 
 const imageParam = "image"
 const selectedTagsParam = "selectedTags"
@@ -16,11 +16,10 @@ const orderingIDParam = "orderingID"
 })
 export class QuestionManagerService {
   private _querySubscription?: Subscription = undefined
-  private _restSubscription?: Subscription = undefined
 
-  private _currentFileID?: string = undefined
+  private _currentFileID?: number = undefined
   public get currentFileID() { return this._currentFileID }
-  private _currentFile?: FileEntry = undefined
+  private _currentFile?: TaggedFileEntry = undefined
   public get currentFile() { return this._currentFile }
 
   private _selectedTags: number[] = []
@@ -32,12 +31,12 @@ export class QuestionManagerService {
   private _fetchErr?: string
   public get fetchErr() { return this._fetchErr }
 
-  private _questions?: QuestionEntry[] = undefined
+  private _questions?: QuestionWithOptions[] = undefined
   private _orderingID?: number = undefined
-  private _currentQuestion: QuestionEntry | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
+  private _currentQuestion: QuestionWithOptions | null | undefined = undefined // undefined means hasn't loaded yet, null means we're done (no more questions), Question means current question
   public get currentQuestion() { return this._currentQuestion }
 
-  constructor(private router: Router, private route: ActivatedRoute, private filesService: FilesService, private questionsService: QuestionsService) {
+  constructor(private router: Router, private route: ActivatedRoute, private supaService: SupabaseService) {
   }
 
   private getNumberArrayParam(params: Params, param: string): number[] {
@@ -70,28 +69,41 @@ export class QuestionManagerService {
     this._selectedTags = []
     this._questions = undefined
     this._currentQuestion = undefined
+    this._orderingID = 0
 
     this._fetchErr = undefined
   }
 
   // Call when navigating to a new file
-  public establishFile(fileID: string, orderingID: number = 0) {
+  public async establishFile(fileID: number, orderingID: number = 0): Promise<void> {
     this.wipeVars()
 
     this._currentFileID = fileID
     this._orderingID = orderingID
 
-    const listQuestions = this.questionsService.listQuestions()
-    const getFile = this.filesService.getFileById(this._currentFileID)
+    // Get file and questions from the database
+    const { data: filedata, error: fileerr } = await this.supaService.getFileByID(this._currentFileID)
+    if (fileerr) {
+      throw fileerr
+    }
+    this._currentFile = filedata as TaggedFileEntry
+    // Default selected tags to the tags on the file: the query params will overwrite this later if we have something else
+    this._selectedTags = this._currentFile.filetags.map(t => t.tagid)
+
+    const { data: questiondata, error: questionerr } = await this.supaService.listQuestions()
+    if (questionerr) {
+      throw questionerr
+    }
+    this._questions = questiondata as QuestionWithOptions[]
 
     if (this._querySubscription) {
       this._querySubscription.unsubscribe()
     }
-    // Use combineLatest to wait until the questions have loaded (ignore the value otherwise)
-    this._querySubscription = combineLatest([this.route.queryParams, listQuestions]).subscribe(combined => {
-      const queryParams = combined[0]
-      const questions = combined[1]
-      if (!questions) {
+    // Once the query parameters have loaded (we can probably shorten this further),
+    // see if we're between questions and move up if we need to
+    this._querySubscription = this.route.queryParams.subscribe(queryParams => {
+      if (!this._questions) {
+        console.error("this._questions is undefined")
         return
       }
 
@@ -105,8 +117,8 @@ export class QuestionManagerService {
       }
 
       // Find next highest ordering ID
-      const nextQuestionIndex = questions.findIndex(q => this._orderingID != undefined && (q.orderingID ? q.orderingID : 0) >= this._orderingID)
-      const nextQuestion = nextQuestionIndex >= 0 ? questions[nextQuestionIndex] : undefined
+      const nextQuestionIndex = this._questions.findIndex(q => this._orderingID != undefined && (q.orderingID ? q.orderingID : 0) >= this._orderingID)
+      const nextQuestion = nextQuestionIndex >= 0 ? this._questions[nextQuestionIndex] : undefined
       if (nextQuestion === undefined) {
         // We're done! No more questions
         this._currentQuestion = null
@@ -116,42 +128,16 @@ export class QuestionManagerService {
       if ((nextQuestion.orderingID ? nextQuestion.orderingID : 0) == this._orderingID) {
         // Our ordering ID matches! This is our current question
         this._currentQuestion = nextQuestion
-        this._completionPercentage = (nextQuestionIndex / questions.length) * 100
+        this._completionPercentage = (nextQuestionIndex / this._questions.length) * 100
         return
       }
 
       // Navigate if not equal, we're on an ID between questions
       this.router.navigate([`/tag`], { queryParamsHandling: 'merge', queryParams: { [orderingIDParam]: nextQuestion.orderingID, [imageParam]: this._currentFileID } })
     })
-
-    if (this._restSubscription) {
-      this._restSubscription.unsubscribe()
-    }
-    this._restSubscription = combineLatest( // Use combineLatest to wait until both have returned at least something
-      [listQuestions, getFile]
-    ).subscribe({
-      next: result => {
-        this._fetchErr = undefined
-
-        if (!result[0] || !result[1]) {
-          return // Should never happen, but just in case to prevent weirdness
-        }
-
-        this._questions = result[0]
-        this._currentFile = result[1]
-
-        if (this._currentFile.tags && this._currentFile.tags.length > 0) {
-          this._selectedTags = this._currentFile.tags
-        }
-
-      },
-      error: err => {
-        this._fetchErr = err.toString()
-      }
-    })
   }
 
-  public nextQuestion() {
+  public async nextQuestion(): Promise<void> {
     if (!this._questions || !this._currentFileID || !this._orderingID) {
       return
     }
@@ -161,14 +147,13 @@ export class QuestionManagerService {
     if (lastQuestion.orderingID && this._orderingID > lastQuestion.orderingID) {
       // If we're past the end, let's save this file
       // TODO: gracefully handle errors on tagging!
-      // TODO: move this to an external event handler?
-      this.filesService.patchFileById(this._currentFileID, {
-        tags: this._selectedTags,
-        hasBeenTagged: true
-      }).subscribe(_ => {
-        this.wipeVars()
-        this.router.navigate(["/tag"], { queryParams: { [imageParam]: null, [orderingIDParam]: null, [selectedTagsParam]: null } })
-      })
+      const error = await this.supaService.patchFile(this._currentFileID, {
+        hasBeenTagged: true,
+      }, this._selectedTags)
+      if (error) {
+        throw error
+      }
+      this.nextFile()
       return
     }
 
@@ -188,6 +173,12 @@ export class QuestionManagerService {
     this._orderingID = allLowerQuestions.length > 0 ? allLowerQuestions[allLowerQuestions.length - 1].orderingID : 0
 
     this.renavigate()
+  }
+
+  public nextFile() {
+    this.wipeVars()
+    this.wipeVars()
+    this.router.navigate(["/tag"], { queryParams: { [imageParam]: null, [orderingIDParam]: null, [selectedTagsParam]: null } })
   }
 
   public addTag(tag: number) {

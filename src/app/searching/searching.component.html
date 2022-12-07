@@ -1,6 +1,7 @@
 <!-- Outer div necessary to keep everything nicely vertically aligned -->
 <div class="h-full flex flex-col">
-    <div id="image-viewer-root" class="w-full h-full fixed" *ngIf="queryManager.viewingFileID != ''">
+    <div id="image-viewer-root" class="w-full h-full fixed"
+        *ngIf="queryManager.viewingFileID != -1 && queryManager.viewingFile">
         <button mat-icon-button disableRipple class="viewer-button absolute right-2 top-2"
             (click)="queryManager.viewClose()">
             <mat-icon>close</mat-icon>
@@ -10,14 +11,14 @@
             <mat-icon color="{{ viewerInfoOpen ? 'accent' : '' }}">info</mat-icon>
         </button>
         <button mat-icon-button disableRipple class="viewer-button absolute left-16 top-2"
-            (click)="apiUtility.downloadFileContents(queryManager.viewingFileID)">
+            (click)="apiUtility.downloadFileContents(queryManager.viewingFile.filename, queryManager.viewingFileID)">
             <mat-icon>download</mat-icon>
         </button>
         <div id="info-bar" [class.viewer-open]="viewerInfoOpen" class="fixed w-full text-white">
             <div class="relative left-28 p-3 flex flex-col">
-                <h1>{{ queryManager.viewingFileID }}</h1>
+                <h1>{{ queryManager.viewingFile.filename }}</h1>
                 <div *ngIf="queryManager.viewingFile != undefined">
-                    <app-tag-chip [tagIDs]="queryManager.viewingFile.tags"></app-tag-chip>
+                    <app-tag-chip [tagIDs]="currentFileTags"></app-tag-chip>
                 </div>
             </div>
         </div>
@@ -35,7 +36,11 @@
         <mat-sidenav-content class="p-3">
             <div class="flex flex-row items-end">
                 <h1>Results</h1>
-                <h3 *ngIf="queryManager.resultsCount != undefined" class="ml-1.5">({{ queryManager.resultsCount }})</h3>
+                <h3 *ngIf="queryManager.resultsCount != undefined" class="ml-1.5">
+                    (<span
+                        *ngIf="queryManager.searchResult && queryManager.searchResult.length > 0">1-{{queryManager.searchResult.length}}
+                        of </span>{{ queryManager.resultsCount }})
+                </h3>
             </div>
             <mat-spinner *ngIf="queryManager.searchResult === undefined" diameter="50"></mat-spinner>
             <h2
@@ -48,7 +53,8 @@
             <mat-grid-list *ngIf="queryManager.searchResult != undefined" cols="4" rowHeight="256">
                 <mat-grid-tile *ngFor="let file of queryManager.searchResult">
                     <img class="h-full max-h-72 m-0 object-scale-down hover:scale-95 transition-all cursor-pointer"
-                        [src]="apiUtility.getFileThumbAddress(file.id)" (click)="queryManager.viewFile(file.id)" />
+                        [src]="apiUtility.getFileThumbAddress(file.filename, file.id)"
+                        (click)="queryManager.viewFile(file.id)" />
                 </mat-grid-tile>
             </mat-grid-list>
             <button

@@ -1,12 +1,12 @@
 <div class="spacer">
-    <h1 *ngIf="tagsErr === undefined && allTags && allTags.length == 0">No tags present! Talk to your sysadmin</h1>
+    <h1 *ngIf="tagsErr === undefined && allTags && allTags.length == 0">No tags present! Add them in Settings</h1>
     <h1 *ngIf="tagsErr !== undefined">Failed to get tags: <code>{{ tagsErr }}</code></h1>
 </div>
 <div class="tags-cols flex flex-row pb-1.5" *ngIf="allTags && allTags.length > 0">
     <div class="tag-col px-3 flex-grow">
         <ul>
             <li *ngFor="let tag of query.getUnusedTags(allTags)">
-                <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="true" [removeVisible]="true"
+                <app-tagquery tag="{{tag.name}}" [addVisible]="true" [removeVisible]="true"
                     (addClicked)="tagAction('include', tag.id)" (removeClicked)="tagAction('exclude', tag.id)">
                 </app-tagquery>
             </li>
@@ -22,7 +22,7 @@
         </div>
         <ul>
             <li *ngFor="let tag of query.getIncludedTags(allTags)">
-                <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="false" [removeVisible]="true"
+                <app-tagquery tag="{{tag.name}}" [addVisible]="false" [removeVisible]="true"
                     (removeClicked)="tagAction('neutral', tag.id)"></app-tagquery>
             </li>
         </ul>
@@ -37,7 +37,7 @@
         </div>
         <ul>
             <li *ngFor="let tag of query.getExcludedTags(allTags)">
-                <app-tagquery tag="{{tag.userFriendlyName}}" [addVisible]="true" [removeVisible]="false"
+                <app-tagquery tag="{{tag.name}}" [addVisible]="true" [removeVisible]="false"
                     (addClicked)="tagAction('neutral', tag.id)"></app-tagquery>
             </li>
         </ul>

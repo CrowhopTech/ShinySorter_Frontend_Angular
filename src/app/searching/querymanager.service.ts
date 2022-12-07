@@ -1,10 +1,9 @@
-import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SearchMode, FileQuery } from '../filequery';
-import { DefaultService as ShinySorterService, FileEntry, FilesService } from 'angular-client';
-import { APIUtilityService } from '../apiutility.service';
+import { SupabaseService, TaggedFileEntry } from '../supabase.service';
 
 const includeTagsParam = "includeTags"
 const excludeTagsParam = "excludeTags"
@@ -12,7 +11,7 @@ const includeModeParam = "includeMode"
 const excludeModeParam = "excludeMode"
 const viewingFileParam = "view"
 
-const pageSize = 10
+const pageSize = 3
 
 @Injectable({
   providedIn: 'root'
@@ -49,10 +48,10 @@ export class QueryManagerService {
   @Output() searchResultReady = new EventEmitter<undefined>();
 
   private _query: FileQuery;
-  private _viewingFileID: string;
-  private _viewingFile: FileEntry | undefined;
+  private _viewingFileID: number;
+  private _viewingFile: TaggedFileEntry | undefined;
 
-  private _searchResult: FileEntry[] | undefined = undefined
+  private _searchResult: TaggedFileEntry[] | undefined = undefined
   private _searchSubscription: Subscription | null = null
   private _searchError?: string
   private _resultsCount?: number
@@ -62,15 +61,15 @@ export class QueryManagerService {
     return this._query;
   }
 
-  public get viewingFileID(): string {
+  public get viewingFileID(): number {
     return this._viewingFileID
   }
 
-  public get viewingFile(): FileEntry | undefined {
+  public get viewingFile(): TaggedFileEntry | undefined {
     return this._viewingFile
   }
 
-  public get searchResult(): FileEntry[] | undefined {
+  public get searchResult(): TaggedFileEntry[] | undefined {
     return this._searchResult
   }
 
@@ -101,14 +100,14 @@ export class QueryManagerService {
     })
   }
 
-  public viewFile(fileID?: string) {
-    if (!fileID || fileID.length == 0) {
+  public viewFile(fileID?: number) {
+    if (!fileID) {
       return
     }
     this.router.navigate(["/search"], {
       queryParamsHandling: 'merge',
       queryParams: {
-        [viewingFileParam]: fileID
+        [viewingFileParam]: fileID.toString()
       }
     })
   }
@@ -134,73 +133,60 @@ export class QueryManagerService {
     return this._searchSubscription && !this._searchSubscription.closed
   }
 
-  listFileCall(cont?: string, append: boolean = false) {
-    if (this._searchSubscription) {
-      this._searchSubscription.unsubscribe()
-    }
+  async listFileCall(cont?: number, append: boolean = false): Promise<void> {
     if (!append) {
       this._searchResult = undefined
       this._noMoreResults = false
       this._resultsCount = undefined
     }
     this._searchError = undefined
-    this._searchSubscription = this.filesService.listFiles(
-      this.query.includeTags,
-      this.query.includeMode,
-      this.query.excludeTags,
-      this.query.excludeMode,
-      true,
-      pageSize,
-      cont != undefined && cont.length > 0 ? cont : undefined,
-      "response"
-    ).subscribe({
-      next: (resp: HttpResponse<FileEntry[]>) => {
-        if (!resp.body) {
-          return
-        }
-        const files = resp.body
-
-        console.log(resp.headers.keys())
-
-        if (resp.headers.has("X-Filecount")) {
-          const paramVal = resp.headers.get("X-Filecount")
-          if (paramVal && paramVal != "") {
-            const countParam = parseInt(paramVal)
-            if (countParam > -1) {
-              this._resultsCount = countParam
-            }
-          }
-        }
-
-        if (append) {
-          if (files.length == 0) {
-            this._noMoreResults = true
-          }
-          files.forEach(f => this._searchResult?.push(f))
-        } else {
-          this._searchResult = files
-        }
-        this._searchError = undefined
-        this.searchResultReady.emit()
-      },
-      error: (err: any) => {
-        this._searchResult = []
-        if (err instanceof HttpErrorResponse) {
-          this._searchError = err.message
-        } else {
-          this._searchError = err.toString()
-        }
-        this.searchResultReady.error(this._searchError)
+    const { data, error } = await this.supaService.listFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true, pageSize, cont)
+    if (error) {
+      this._searchResult = []
+      if (error instanceof HttpErrorResponse) {
+        this._searchError = error.message
+      } else {
+        this._searchError = error.toString()
       }
-    })
+      this.searchResultReady.error(this._searchError)
+      return
+    }
+    if (!data) {
+      return
+    }
+    const files = data
+
+    if (!cont || (cont && cont == 0)) {
+      // Page zero, let's get the overall count
+      const { count, error } = await this.supaService.countFiles(this.query.includeTags, this.query.includeMode, this.query.excludeTags, this.query.excludeMode, true, pageSize, cont)
+      if (error) {
+        throw error
+      }
+      if (count > -1) {
+        this._resultsCount = count
+      }
+    }
+
+    if (append) {
+      if (files.length == 0) {
+        this._noMoreResults = true
+      }
+      files.forEach(f => this._searchResult?.push(f))
+    } else {
+      this._searchResult = files
+    }
+    this._searchError = undefined
+    this.searchResultReady.emit()
   }
 
-  constructor(private router: Router, private route: ActivatedRoute, private filesService: FilesService, private apiUtility: APIUtilityService) {
+  constructor(private router: Router, private route: ActivatedRoute, private supaService: SupabaseService) {
     this._query = new FileQuery([], [], "all", "all", true)
-    this._viewingFileID = ""
+    this._viewingFileID = -1
     this._viewingFile = undefined
+  }
 
-    this.route.queryParams.subscribe(params => {
+  async ngOnInit(): Promise<void> {
+    this.route.queryParams.subscribe(async (params) => {
       const newQuery = new FileQuery([], [], "all", "all", true)
       newQuery.includeTags = this.getNumberArrayParam(params, includeTagsParam)
       newQuery.excludeTags = this.getNumberArrayParam(params, excludeTagsParam)
@@ -208,17 +194,21 @@ export class QueryManagerService {
       newQuery.excludeMode = this.getSearchModeParam(params, excludeModeParam, "all")
       newQuery.hasBeenTagged = true
 
-      let viewingFile: string = params[viewingFileParam]
+      let viewingFile: number = params[viewingFileParam]
 
       if (!newQuery.equals(this._query) || viewingFile != this._viewingFileID) {
         this.paramsChanged.emit()
       }
       this._query = newQuery
-      this._viewingFileID = viewingFile ? viewingFile : ""
-      if (this._viewingFileID != "") {
-        this.filesService.getFileById(this.viewingFileID).subscribe(f => this._viewingFile = f)
+      this._viewingFileID = viewingFile ? viewingFile : -1
+      if (this._viewingFileID != -1) {
+        let file = await this.supaService.getFileByID(this.viewingFileID)
+        if (file.data) {
+          this._viewingFile = file.data as TaggedFileEntry
+        }
       }
-      this.listFileCall("")
+      this.listFileCall()
     })
+
   }
 }

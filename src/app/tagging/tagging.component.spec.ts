@@ -8,7 +8,6 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterModule } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ApiModule } from 'angular-client';
 import { AppModule } from '../app.module';
 
 import { TaggingComponent } from './tagging.component';
@@ -21,7 +20,6 @@ describe('TaggingComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [TaggingComponent],
       imports: [
-        ApiModule,
         HttpClientModule,
         RouterModule,
         RouterTestingModule,

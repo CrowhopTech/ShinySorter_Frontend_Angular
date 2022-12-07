@@ -35,12 +35,10 @@ import { SearchinputComponent } from './searching/searchinput/searchinput.compon
 import { QuestionComponent } from './tagging/question/question.component';
 import { FileviewerComponent } from './fileviewer/fileviewer.component';
 import { FileSaverModule } from 'ngx-filesaver';
-import { AppService } from './app.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { SettingsComponent } from './settings/settings.component';
 import { TagSettingsComponent } from './settings/tag-settings/tag-settings.component';
 import { QuestionSettingsComponent, QuestionDeleteDialogComponent, QuestionReorderDialogComponent } from './settings/question-settings/question-settings.component';
-import { ApiModule, Configuration } from 'angular-client';
 import { TagTileComponent } from './settings/tag-settings/tag-tile/tag-tile.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TagCreateTileComponent } from './settings/tag-settings/tag-create-tile/tag-create-tile.component';
@@ -48,22 +46,25 @@ import { TagDeleteDialogComponent } from './settings/tag-settings/tag-delete-dia
 import { QuestionTileComponent } from './settings/question-settings/question-tile/question-tile.component';
 import { QuestionEditDialogComponent, TagOptionEditComponent } from './settings/question-settings/question-edit-dialog/question-edit-dialog.component';
 import { TagChipComponent } from './tag-chip/tag-chip.component';
+import { AppService } from './app.service';
+
+// Use this to load config values **at runtime**! See the comment values around this file for a full example (mainly see providers in the module)
 
 export function initApp(appService: AppService) {
   return () => appService.load().then(_ => {
     // Once the config is loaded, update the API client config with the new base path
-    if (appService.settings?.apiServerAddress) {
-      apiConfig.basePath = appService.settings?.apiServerAddress
-    }
+    // if (appService.settings?.apiServerAddress) {
+    //   apiConfig.basePath = appService.settings?.apiServerAddress
+    // }
   });
 }
 
-export const apiConfig = new Configuration({
-  basePath: ""
-});
-export function getApiConfig() {
-  return apiConfig;
-}
+// export const apiConfig = new Configuration({
+//   basePath: ""
+// });
+// export function getApiConfig() {
+//   return apiConfig;
+// }
 
 @NgModule({
   declarations: [
@@ -118,7 +119,7 @@ export function getApiConfig() {
     FileSaverModule,
     FormsModule,
     ReactiveFormsModule,
-    ApiModule.forRoot(getApiConfig)
+    // ApiModule.forRoot(getApiConfig)
   ],
   providers: [
     {

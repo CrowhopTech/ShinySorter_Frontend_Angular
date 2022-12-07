@@ -1,9 +1,9 @@
 <div class="flex flex-col justify-center items-center text-center h-full">
-    <video *ngIf="getFileType() == 'video'" controls loop class="object-contain h-full w-full"
+    <video *ngIf="getFileType() == 'video' && file" controls loop class="object-contain h-full w-full"
         oncanplay="this.muted = true; this.play();">
-        <source src="{{ apiUtility.getFileContentsAddress(fileID) }}" type="video/mp4">
+        <source src="{{ apiUtility.getFileContentsAddress(file.filename, fileID) }}" type="video/mp4">
     </video>
-    <img *ngIf="getFileType() == 'image'" src="{{ apiUtility.getFileContentsAddress(fileID) }}"
+    <img *ngIf="getFileType() == 'image' && file" src="{{ apiUtility.getFileContentsAddress(file.filename, fileID) }}"
         class="object-contain h-full w-full" />
 
     <h1 *ngIf="fileError === undefined && imageNotFound == false && getFileType()=='unknown'">Unknown MIME type '{{

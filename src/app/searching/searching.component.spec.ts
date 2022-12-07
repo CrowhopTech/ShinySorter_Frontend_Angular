@@ -11,7 +11,6 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ApiModule } from 'angular-client';
 import { AppModule } from '../app.module';
 
 import { SearchingComponent } from './searching.component';
@@ -35,7 +34,6 @@ describe('SearchingComponent', () => {
         MatIconModule,
         MatInputModule,
         MatProgressSpinnerModule,
-        ApiModule,
         NoopAnimationsModule,
         AppModule
       ]

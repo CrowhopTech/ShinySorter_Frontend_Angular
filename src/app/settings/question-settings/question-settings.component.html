@@ -18,7 +18,7 @@
 </div>
 <mat-accordion>
     <app-question-tile *ngFor="let q of questions" [question]="q"
-        (updateQuestion)="updateQuestion(q.questionID, $event)" (deleteQuestion)="deleteQuestion($event)"
-        (reorderQuestions)="reorderQuestions($event)">
+        (updateQuestion)="updateQuestion(q.id, $event.question, $event.options)"
+        (deleteQuestion)="deleteQuestion($event)" (reorderQuestions)="reorderQuestions($event)">
     </app-question-tile>
 </mat-accordion>

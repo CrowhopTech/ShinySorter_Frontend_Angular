@@ -7,7 +7,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { ApiModule } from 'angular-client';
 
 import { TagTileComponent } from './tag-tile.component';
 
@@ -19,7 +18,6 @@ describe('TagTileComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [TagTileComponent],
       imports: [
-        ApiModule,
         HttpClientModule,
         MatSnackBarModule,
         MatDialogModule,

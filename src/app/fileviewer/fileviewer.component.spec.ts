@@ -1,8 +1,5 @@
 import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ApiModule, FilesService } from 'angular-client';
-import { APIUtilityService } from '../apiutility.service';
-import { AppModule } from '../app.module';
 
 import { FileviewerComponent } from './fileviewer.component';
 
@@ -14,7 +11,6 @@ describe('FileviewerComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [FileviewerComponent],
       imports: [
-        ApiModule,
         HttpClientModule
       ]
     })

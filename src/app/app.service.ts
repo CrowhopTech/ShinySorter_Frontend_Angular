@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
-import { environment } from '../environments/environment'
+import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 
 export class AppConfig {
-    apiServerAddress: string = ""
+    contentServerAddress: string = ""
+    queryServerAddress: string = ""
 }
 
 @Injectable({

@@ -1,10 +1,8 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { DefaultService as ShinySorterService, FilesService, TagsService } from 'angular-client';
 import { FileSaverService } from 'ngx-filesaver';
-import { map, Observable } from 'rxjs';
-import { AppConfig, AppService } from './app.service';
-import { FileEntry } from 'angular-client';
+import { AppService } from './app.service';
+import { SupabaseService, Tag, TaggedFileEntry } from './supabase.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,24 +11,26 @@ export class APIUtilityService {
   tagsMap?: Map<number, string>
   tagsFetchError?: string
 
-  constructor(private filesService: FilesService, private tagsService: TagsService, private appConfig: AppService, private http: HttpClient, private fileSaver: FileSaverService) {
+  constructor(private appConfig: AppService, private http: HttpClient, private fileSaver: FileSaverService, private supaService: SupabaseService) {
     this.updateTagCache()
   }
 
   // ===== Tag Cache
-  public updateTagCache() {
+  public async updateTagCache() {
     this.tagsMap = undefined
     this.tagsFetchError = undefined
-    this.tagsService.listTags().subscribe({
-      next: tags => {
-        this.tagsMap = new Map<number, string>();
-        tags.forEach(tag => { if (tag.id && tag.userFriendlyName) { this.tagsMap?.set(tag.id, tag.userFriendlyName) } })
-      },
-      error: err => this.tagsFetchError = err.toString()
-    })
+    const { data, error } = await this.supaService.listTags()
+    if (error) {
+      throw error
+    }
+    const tags = data as Tag[]
+    if (tags) {
+      this.tagsMap = new Map<number, string>();
+      tags.forEach(tag => { if (tag.id && tag.name) { this.tagsMap?.set(tag.id, tag.name) } })
+    }
   }
 
-  public getTagName(tagID?: number): string | undefined {
+  public getTagName(tagID: (number | undefined | null)): string | undefined {
     if (!this.tagsMap || !tagID) {
       return undefined
     }
@@ -39,38 +39,42 @@ export class APIUtilityService {
 
   // ===== File Contents
 
-  public getFileContentsAddress(fileID?: string): string {
+  public getFileContentsAddress(fileName: string, fileID?: number): string {
     if (!fileID) {
       return ""
     }
-    return `${this.appConfig.settings?.apiServerAddress}/files/contents/${fileID}`
+    return `${this.appConfig.settings?.contentServerAddress}/${fileName}`
   }
 
-  public getFileThumbAddress(fileID?: string): string {
+  public getFileThumbAddress(fileName: string, fileID?: number): string {
     if (!fileID) {
       return ""
     }
-    return `${this.getFileContentsAddress(fileID)}?thumb=true`
+    if (!this.appConfig.settings) {
+      return ""
+    }
+    return `${this.appConfig.settings?.contentServerAddress}/thumbs/${fileName}.png`
   }
 
-  public downloadFileContents(fileID?: string) {
+  public downloadFileContents(fileName: string, fileID?: number) {
     if (!fileID) {
       return
     }
-    this.http.get(this.getFileContentsAddress(fileID), { observe: 'response', responseType: 'blob' }).subscribe((res: HttpResponse<Blob>) => {
-      this.fileSaver.save(res.body, fileID)
+    this.http.get(this.getFileContentsAddress(fileName, fileID), { observe: 'response', responseType: 'blob' }).subscribe((res: HttpResponse<Blob>) => {
+      this.fileSaver.save(res.body, fileName)
     })
   }
 
-  public getRandomUntaggedFile(): Observable<FileEntry | null> {
-    return this.filesService.listFiles([], "all", [], "all", false).pipe(map(untaggedFiles => {
-      if (untaggedFiles.length == 0) {
-        return null
-      }
-
-      // Shuffle the files
-      untaggedFiles.sort((a, b) => Math.random() - 0.5);
-      return untaggedFiles[0]
-    }))
+  public async getRandomUntaggedFile(): Promise<{ file: TaggedFileEntry | null, error: Error | null }> {
+    const { data, error } = await this.supaService.listFiles([], "all", [], "all", false, 10)
+    if (error) {
+      return { file: null, error: error }
+    }
+    if (data.length == 0) {
+      return { file: null, error: null }
+    }
+    const castData = data as TaggedFileEntry[]
+    data.sort((a, b) => Math.random() - 0.5);
+    return { file: castData[0], error: null }
   }
 }

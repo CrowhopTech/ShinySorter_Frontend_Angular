@@ -1,10 +1,9 @@
-import { ArrayDataSource } from '@angular/cdk/collections';
 import { Component, EventEmitter, Inject, Input, OnInit, Output } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { DefaultService as ShinySorterService, QuestionEntry, QuestionPatch, TagEntry, TagOption, TagPatch, TagsService } from 'angular-client';
 import { APIUtilityService } from 'src/app/apiutility.service';
+import { QuestionOption, QuestionOptionCreate, QuestionPatch, QuestionWithOptions, SupabaseService, Tag } from 'src/app/supabase.service';
 
 @Component({
   selector: 'app-question-edit-dialog',
@@ -13,30 +12,34 @@ import { APIUtilityService } from 'src/app/apiutility.service';
 })
 export class QuestionEditDialogComponent implements OnInit {
   public questionCopy: QuestionPatch
+  public questionOptionsCopy: QuestionOptionCreate[]
   public mutexString = ""
-  public tags?: TagEntry[]
+  public tags?: Tag[]
 
   boolToStr = (b: boolean) => b ? 'true' : 'false'
 
-  constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionEntry }, private tagsService: TagsService, public apiUtility: APIUtilityService) {
+  constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionWithOptions }, public apiUtility: APIUtilityService, private supaService: SupabaseService) {
     this.questionCopy = {
-      mutuallyExclusive: data.question.mutuallyExclusive ? "true" : "false",
+      id: data.question.id,
       orderingID: data.question.orderingID,
       questionText: data.question.questionText,
-      tagOptions: JSON.parse(JSON.stringify(data.question.tagOptions))
+      mutuallyExclusive: data.question.mutuallyExclusive,
     }
+    this.questionOptionsCopy = data.question.questionoptions
     this.mutexString = data.question.mutuallyExclusive ? "Allow only one selection" : "Allow selecting multiple"
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.apiUtility.updateTagCache()
-    this.tagsService.listTags().subscribe(tags => {
-      this.tags = tags
-    })
+    const { data, error } = await this.supaService.listTags()
+    if (error) {
+      throw error
+    }
+    this.tags = data as Tag[]
   }
 
   mutexChange($event: MatSlideToggleChange) {
-    this.questionCopy.mutuallyExclusive = this.boolToStr($event.checked)
+    this.questionCopy.mutuallyExclusive = $event.checked
     this.mutexString = $event.checked ? "Allow only one selection" : "Allow selecting multiple"
   }
 
@@ -53,16 +56,16 @@ export class QuestionEditDialogComponent implements OnInit {
   }
 
   removeTag(tagID: number) {
-    if (!this.questionCopy || !this.questionCopy.tagOptions) {
+    if (!this.questionCopy || !this.questionOptionsCopy) {
       return
     }
 
-    const idx = this.questionCopy.tagOptions.findIndex(to => to.tagID == tagID)
+    const idx = this.questionOptionsCopy.findIndex(to => to.tagid == tagID)
     if (idx == -1) {
       return
     }
 
-    this.questionCopy.tagOptions.splice(idx, 1)
+    this.questionOptionsCopy.splice(idx, 1)
   }
 
   addOption() {
@@ -74,7 +77,7 @@ export class QuestionEditDialogComponent implements OnInit {
     const lowestTagID = this.tags.map(t => t.id).reduce((p, c) => Math.min(p, c))
     const lowestTagName = this.apiUtility.getTagName(lowestTagID)
 
-    this.questionCopy.tagOptions?.push({ tagID: lowestTagID, optionText: lowestTagName ? lowestTagName : "" })
+    this.questionOptionsCopy.push({ tagid: lowestTagID, optiontext: lowestTagName ? lowestTagName : "", questionid: this.questionCopy.id })
   }
 }
 
@@ -88,20 +91,20 @@ export class QuestionEditDialogComponent implements OnInit {
  * Renders a selector for which tag(s) goes to which options, and a text box for the text displayed
  */
 export class TagOptionEditComponent implements OnInit {
-  private _tagOption?: TagOption
-  @Input() set tagOption(to: TagOption | undefined) {
+  private _tagOption?: QuestionOptionCreate
+  @Input() set tagOption(to: QuestionOptionCreate | undefined) {
     this._tagOption = to
-    this._originalText = to ? to.optionText : ""
-    this._originalTag = to ? to.tagID : -1
+    this._originalText = to ? to.optiontext : ""
+    this._originalTag = to ? to.tagid : -1
   }
   get tagOption() {
     return this._tagOption
   }
 
-  @Input() tags?: TagEntry[] // Pass this in as an input so we don't have to fetch it n times
+  @Input() tags?: Tag[] // Pass this in as an input so we don't have to fetch it n times
 
-  private _originalText: string = ""
-  private _originalTag: number = -1
+  private _originalText?: string | null = null
+  private _originalTag?: number | null = -1
 
   @Output() removeTag = new EventEmitter<number>();
 
@@ -117,14 +120,14 @@ export class TagOptionEditComponent implements OnInit {
       return
     }
 
-    this.tagOption.optionText = $event.target.value
+    this.tagOption.optiontext = $event.target.value
   }
 
   resetOption() {
     if (!this.tagOption) { return }
 
-    this.tagOption.optionText = this._originalText
-    this.tagOption.tagID = this._originalTag
+    this.tagOption.optiontext = this._originalText
+    this.tagOption.tagid = this._originalTag
   }
 
   tagChange($event: MatSelectChange) {
@@ -132,6 +135,6 @@ export class TagOptionEditComponent implements OnInit {
       return
     }
 
-    this.tagOption.tagID = $event.value
+    this.tagOption.tagid = $event.value
   }
 }

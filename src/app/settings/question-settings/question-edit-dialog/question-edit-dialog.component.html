@@ -22,13 +22,12 @@
                 {{mutexString}}
             </mat-slide-toggle>
 
-            <button mat-icon-button
-                (click)="questionCopy.mutuallyExclusive = boolToStr(data.question.mutuallyExclusive)">
+            <button mat-icon-button (click)="questionCopy.mutuallyExclusive = data.question.mutuallyExclusive">
                 <mat-icon>settings_backup_restore</mat-icon>
             </button>
         </div>
 
-        <div *ngFor="let tagOption of questionCopy.tagOptions" class="my-1">
+        <div *ngFor="let tagOption of questionOptionsCopy" class="my-1">
             <app-tag-option-edit [tagOption]="tagOption" [tags]="tags" (removeTag)="removeTag($event)">
             </app-tag-option-edit>
         </div>
@@ -42,7 +41,7 @@
     <button mat-button [mat-dialog-close]="undefined" cdkFocusInitial>
         <mat-icon>cancel</mat-icon> Cancel
     </button>
-    <button mat-button [mat-dialog-close]="questionCopy">
+    <button mat-button [mat-dialog-close]="{question: questionCopy, options: questionOptionsCopy}">
         <mat-icon>save</mat-icon> Save
     </button>
 </mat-dialog-actions>
