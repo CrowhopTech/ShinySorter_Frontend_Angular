@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TagEntry, TagsService } from 'angular-client';
+import { SupabaseService, Tag } from 'src/app/supabase.service';
 import { TagDeleteDialogComponent } from '../tag-delete-dialog/tag-delete-dialog.component';
 
 @Component({
@@ -13,10 +13,10 @@ export class TagTileComponent implements OnInit {
 
   @Output() refetchRequired = new EventEmitter<undefined>();
 
-  private _tag?: TagEntry
-  @Input() set tag(newTag: TagEntry | undefined) {
+  private _tag?: Tag
+  @Input() set tag(newTag: Tag | undefined) {
     this._tag = newTag
-    this.newName = newTag?.userFriendlyName // Use a setter so that we can reset the form values if the tag changes
+    this.newName = newTag?.name // Use a setter so that we can reset the form values if the tag changes
     this.newDescription = newTag?.description
     this.savePending = false
   }
@@ -30,7 +30,7 @@ export class TagTileComponent implements OnInit {
   public editing: boolean = false
   public savePending: boolean = false // Set to true when we start the tag save call, set to false once it finishes
 
-  constructor(private tagsService: TagsService, public dialog: MatDialog, private snackbar: MatSnackBar) { }
+  constructor(private supaService: SupabaseService, public dialog: MatDialog, private snackbar: MatSnackBar) { }
 
   ngOnInit(): void { }
 
@@ -39,7 +39,7 @@ export class TagTileComponent implements OnInit {
       return
     }
 
-    this.newName = this.tag.userFriendlyName
+    this.newName = this.tag.name
     this.newDescription = this.tag.description
   }
 
@@ -55,21 +55,24 @@ export class TagTileComponent implements OnInit {
     return `hsl(${hash % 360}, ${pastelStrength}, ${pastelStrength})`;
   }
 
-  submitChanges() {
+  async submitChanges() {
     if (!this.tag) {
       return
     }
 
     this.savePending = true
 
-    this.tagsService.patchTagByID(this.tag.id, {
-      userFriendlyName: this.newName,
-      description: this.newDescription,
-    }).subscribe(_ => {
-      this.editing = false
-      this.refetchRequired.emit()
-      this.snackbar.open(`Tag '${this.newName}' updated successfully`, undefined, { duration: 3000 })
+    const { error } = await this.supaService.patchTag({
+      id: this.tag.id,
+      name: this.newName,
+      description: this.newDescription
     })
+    if (error) {
+      throw error
+    }
+    this.editing = false
+    this.refetchRequired.emit()
+    this.snackbar.open(`Tag '${this.newName}' updated successfully`, undefined, { duration: 3000 })
   }
 
   deleteTag() {
@@ -79,11 +82,15 @@ export class TagTileComponent implements OnInit {
 
     this.dialog.open(TagDeleteDialogComponent, {
       data: {
-        tagName: this.tag.userFriendlyName
+        tagName: this.tag.name
       }
-    }).afterClosed().subscribe((result: boolean) => {
+    }).afterClosed().subscribe(async (result: boolean) => {
       if (result && this.tag) {
-        this.tagsService.deleteTag(this.tag.id).subscribe(_ => this.refetchRequired.emit())
+        const { error } = await this.supaService.deleteTag(this.tag.id)
+        if (error) {
+          throw error
+        }
+        this.refetchRequired.emit()
       }
     });
   }

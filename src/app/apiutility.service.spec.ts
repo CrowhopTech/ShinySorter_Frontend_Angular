@@ -1,6 +1,5 @@
 import { HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { ApiModule } from 'angular-client';
 
 import { APIUtilityService } from './apiutility.service';
 
@@ -10,7 +9,6 @@ describe('APIUtilityService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
-        ApiModule,
         HttpClientModule
       ]
     });

@@ -9,7 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { ApiModule } from 'angular-client';
 
 import { QuestionSettingsComponent } from './question-settings.component';
 
@@ -21,7 +20,6 @@ describe('QuestionSettingsComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [QuestionSettingsComponent],
       imports: [
-        ApiModule,
         HttpClientModule,
         MatProgressSpinnerModule,
         MatCardModule,

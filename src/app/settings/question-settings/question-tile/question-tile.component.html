@@ -4,7 +4,7 @@
             <b>{{ question.questionText }}</b>
         </mat-panel-title>
         <mat-panel-description>
-            {{ question.tagOptions.length }} options,
+            {{ question.questionoptions.length }} options,
             {{ question.mutuallyExclusive ? 'select one' : 'select multiple' }}
             <app-tag-chip [tagIDs]="questionTagIDs" class="ml-3"></app-tag-chip>
         </mat-panel-description>
@@ -12,10 +12,10 @@
     <div *ngIf="question" class="flex flex-row">
         <div class="flex-grow">
             <h3>Options</h3>
-            <div *ngFor="let tagOption of question.tagOptions" class="flex flex-row my-1">
-                <app-tag-chip [tagIDs]="[tagOption.tagID]" class="inline"></app-tag-chip>
-                <span class="ml-0.5 mt-1.5" *ngIf="apiUtility.getTagName(tagOption.tagID) != tagOption.optionText">
-                    : {{tagOption.optionText}}
+            <div *ngFor="let tagOption of question.questionoptions" class="flex flex-row my-1">
+                <app-tag-chip *ngIf="tagOption.tagid" [tagIDs]="[tagOption.tagid]" class="inline"></app-tag-chip>
+                <span class="ml-0.5 mt-1.5" *ngIf="apiUtility.getTagName(tagOption.tagid) != tagOption.optiontext">
+                    : {{tagOption.optiontext}}
                 </span>
             </div>
         </div>

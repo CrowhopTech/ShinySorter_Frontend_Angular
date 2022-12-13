@@ -2,8 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DefaultService as ShinySorterService, QuestionCreate, QuestionEntry, QuestionPatch, QuestionsService, TagEntry, TagsService } from 'angular-client';
-import { combineLatest } from 'rxjs';
+import { QuestionOptionCreate, QuestionPatch, QuestionPatchWithOptions, QuestionWithOptions, SupabaseService, Tag } from 'src/app/supabase.service';
 import { QuestionEditDialogComponent } from './question-edit-dialog/question-edit-dialog.component';
 
 @Component({
@@ -13,8 +12,8 @@ import { QuestionEditDialogComponent } from './question-edit-dialog/question-edi
 })
 export class QuestionSettingsComponent implements OnInit {
 
-  public questions?: QuestionEntry[]
-  public allUnusedTags?: Map<number, TagEntry>
+  public questions?: QuestionWithOptions[]
+  public allUnusedTags?: Map<number, Tag>
   public get unusedTagIDs(): number[] | undefined {
     if (this.allUnusedTags == undefined) {
       return undefined
@@ -24,77 +23,89 @@ export class QuestionSettingsComponent implements OnInit {
     return ids
   }
 
-  constructor(private questionsService: QuestionsService, private tagsService: TagsService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
+  constructor(private supaService: SupabaseService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.refreshQuestions()
   }
 
-  refreshQuestions() {
-    const listQuestions = this.questionsService.listQuestions()
-    const listTags = this.tagsService.listTags()
-    combineLatest([listQuestions, listTags]).subscribe(entry => {
-      this.questions = entry[0]
+  async refreshQuestions() {
+    const { data: tagData, error: tagError } = await this.supaService.listTags()
+    if (tagError) {
+      throw tagError
+    }
+    const tags = tagData as Tag[]
 
-      // Populate the allUnusedTags set with all existing question IDs: we'll then remove all ones in use to get all unused
-      this.allUnusedTags = new Map<number, TagEntry>();
-      entry[1].forEach(tag => this.allUnusedTags?.set(tag.id, tag))
-      this.questions.forEach(q => q.tagOptions.forEach(to => this.allUnusedTags?.delete(to.tagID)))
-    })
+    const { data: questionData, error: questionError } = await this.supaService.listQuestions()
+    if (questionError) {
+      throw questionError
+    }
+    this.questions = questionData as QuestionWithOptions[]
+    tags.forEach(tag => this.allUnusedTags?.set(tag.id, tag))
+    this.questions.forEach(q => q.questionoptions.forEach(to => { if (to.tagid) this.allUnusedTags?.delete(to.tagid); }))
   }
 
   openCreateDialog() {
     this.dialog.open(QuestionEditDialogComponent, {
       data: {
         question: {
-          questionID: -1,
+          id: -1,
+          orderingID: -1,
           questionText: "",
           mutuallyExclusive: false,
-          orderingID: -1,
-          tagOptions: []
-        } as QuestionEntry
+          questionoptions: []
+        } as QuestionWithOptions
+
       }
-    }).afterClosed().subscribe((result?: QuestionPatch) => {
+    }).afterClosed().subscribe(async (result?: { question: QuestionPatchWithOptions, options: QuestionOptionCreate[] }) => {
       if (result) {
-        this.questionsService.createQuestion({
-          questionText: result.questionText ? result.questionText : "",
-          orderingID: result.orderingID ? result.orderingID : -1,
-          mutuallyExclusive: result.mutuallyExclusive ? (result.mutuallyExclusive == QuestionPatch.MutuallyExclusiveEnum.True) : false,
-          tagOptions: result.tagOptions ? result.tagOptions : []
-        }).subscribe(_ => {
-          this.refreshQuestions()
-          this.snackbar.open("Question created successfully", undefined, {
-            duration: 3000
-          })
+        const error = await this.supaService.createQuestion({
+          questionText: result.question.questionText ? result.question.questionText : "",
+          orderingID: result.question.orderingID ? result.question.orderingID : -1,
+          mutuallyExclusive: result.question.mutuallyExclusive,
+        }, result.options)
+        if (error) {
+          throw error
+        }
+        this.refreshQuestions()
+        this.snackbar.open("Question created successfully", undefined, {
+          duration: 3000
         })
       }
     });
   }
 
-  updateQuestion(id: number, $event: QuestionPatch) {
-    this.questionsService.patchQuestionByID(id, $event).subscribe(_ => {
-      this.refreshQuestions()
-      this.snackbar.open("Question updated successfully", undefined, {
-        duration: 3000
-      })
+  async updateQuestion(id: number, $event: QuestionPatch, options?: QuestionOptionCreate[]) {
+    const patch = $event as QuestionPatch
+    const error = await this.supaService.patchQuestion(id, patch, options)
+    if (error) {
+      throw error
+    }
+    this.refreshQuestions()
+    this.snackbar.open("Question updated successfully", undefined, {
+      duration: 3000
     })
   }
 
-  deleteQuestion(id: number) {
-    this.questionsService.deleteQuestion(id).subscribe(_ => {
-      this.refreshQuestions()
-      this.snackbar.open("Question deleted successfully", undefined, {
-        duration: 3000
-      })
+  async deleteQuestion(id: number) {
+    const error = await this.supaService.deleteQuestion(id)
+    if (error) {
+      throw error
+    }
+    this.refreshQuestions()
+    this.snackbar.open("Question deleted successfully", undefined, {
+      duration: 3000
     })
   }
 
-  reorderQuestions(newOrder: number[]) {
-    this.questionsService.reorderQuestions(newOrder).subscribe(_ => {
-      this.refreshQuestions()
-      this.snackbar.open("Question reordered successfully", undefined, {
-        duration: 3000
-      })
+  async reorderQuestions(newOrder: number[]) {
+    const error = await this.supaService.reorderQuestions(newOrder)
+    if (error) {
+      throw error
+    }
+    this.refreshQuestions()
+    this.snackbar.open("Question reordered successfully", undefined, {
+      duration: 3000
     })
   }
 }
@@ -119,50 +130,48 @@ export class QuestionDeleteDialogComponent implements OnInit {
   styleUrls: ['./question-reorder-dialog.component.sass']
 })
 export class QuestionReorderDialogComponent implements OnInit {
-  questions?: QuestionEntry[]
-  questionsBackup?: QuestionEntry[] // Keep a backup, it's easier to copy this and move around our entry
+  questions?: QuestionWithOptions[]
+  questionsBackup?: QuestionWithOptions[] // Keep a backup, it's easier to copy this and move around our entry
   questionErr?: string
 
   newOrder?: number[] = undefined
 
   selectedQuestionIndex: number = -1
 
-  constructor(public dialogRef: MatDialogRef<QuestionReorderDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { reorderQuestion: QuestionEntry }, private questionsService: QuestionsService) { }
+  constructor(public dialogRef: MatDialogRef<QuestionReorderDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { reorderQuestion: QuestionWithOptions }, private supaService: SupabaseService) { }
 
-  ngOnInit(): void {
-    this.questionsService.listQuestions().subscribe({
-      next: questions => {
-        this.questions = questions
-        this.questionsBackup = questions
-        // Find index of given question, selected question is the one before that
-        const indexOfOurQuestion = this.questions.findIndex(q => q.questionID == this.data.reorderQuestion.questionID)
-        if (indexOfOurQuestion == 0) {
-          this.selectedQuestionIndex = -1
-        } else {
-          const questionBeforeOurs = this.questions[indexOfOurQuestion - 1]
-          this.selectedQuestionIndex = questionBeforeOurs.questionID
-        }
-      },
-      error: err => {
-        this.questionErr = err.toString()
+  async ngOnInit(): Promise<void> {
+    const { data, error } = await this.supaService.listQuestions()
+    if (error) {
+      this.questionErr = error.toString()
+    } else {
+      this.questions = data as QuestionWithOptions[]
+      this.questionsBackup = data as QuestionWithOptions[]
+      // Find index of given question, selected question is the one before that
+      const indexOfOurQuestion = this.questions.findIndex(q => q.id == this.data.reorderQuestion.id)
+      if (indexOfOurQuestion == 0) {
+        this.selectedQuestionIndex = -1
+      } else {
+        const questionBeforeOurs = this.questions[indexOfOurQuestion - 1]
+        this.selectedQuestionIndex = questionBeforeOurs.id
       }
-    })
+    }
   }
 
   questionPrecursorChanged($event: MatSelectChange) {
     // Start building a new list in a loop
     // If the question we're on matches the one we're going after, also add the moving question
-    let newOrder: QuestionEntry[] = []
+    let newOrder: QuestionWithOptions[] = []
     if ($event.value == -1) {
       newOrder.push(this.data.reorderQuestion) // Move this question to be first
     }
     this.questionsBackup?.forEach(q => {
-      if (q.questionID == this.data.reorderQuestion.questionID) {
+      if (q.id == this.data.reorderQuestion.id) {
         return
       }
 
       newOrder.push(q)
-      if (q.questionID == $event.value) {
+      if (q.id == $event.value) {
         newOrder.push(this.data.reorderQuestion)
       }
     })

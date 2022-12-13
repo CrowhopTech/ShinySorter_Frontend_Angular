@@ -13,7 +13,6 @@ import { QuestionManagerService } from './questionmanager.service';
 export class TaggingComponent implements OnInit {
   noMoreFiles: boolean = false
   navigateError: string | undefined = undefined
-  stopListening = false
 
   constructor(public router: Router, private route: ActivatedRoute, public apiUtility: APIUtilityService, public questionManager: QuestionManagerService) { }
 
@@ -57,38 +56,34 @@ export class TaggingComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.queryParamMap.subscribe(params => {
-      if (this.stopListening) {
-        return
-      }
-
+    this.route.queryParamMap.subscribe(async params => {
       const image = params.get("image")
 
       if (image != null && image != "") {
         // We have an image: handle it and get out!
-        this.questionManager.establishFile(image)
+        const imageID = parseInt(image)
+
+        this.questionManager.establishFile(imageID)
         return
       }
 
       // Handle if we need to pick a new image
-      this.apiUtility.getRandomUntaggedFile().subscribe({
-        next: untaggedFile => {
-          this.navigateError = undefined
-          if (untaggedFile === null) {
-            this.noMoreFiles = true
-            return
-          }
-
-          this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile.id } })
-        },
-        error: (err: any) => {
-          if (err instanceof HttpErrorResponse) {
-            this.navigateError = err.message
-          } else {
-            this.navigateError = err.toString()
-          }
+      const { file: untaggedFile, error } = await this.apiUtility.getRandomUntaggedFile()
+      if (error) {
+        if (error instanceof HttpErrorResponse) {
+          this.navigateError = error.message
+        } else {
+          this.navigateError = error.toString()
         }
-      })
+      }
+
+      this.navigateError = undefined
+      if (untaggedFile === null) {
+        this.noMoreFiles = true
+        return
+      }
+
+      this.router.navigate(["/tag"], { queryParams: { "image": untaggedFile.id } })
     })
   }
 }

@@ -8,7 +8,7 @@ import { APIUtilityService } from '../apiutility.service';
 })
 export class TagChipComponent implements OnInit {
 
-  @Input() tagIDs?: number[]
+  @Input() tagIDs?: (number | null | undefined)[]
   @Input() noTagsMessage?: string
 
   constructor(public apiUtility: APIUtilityService) { }

@@ -7,7 +7,7 @@
         (selectionChange)="questionPrecursorChanged($event)">
         <mat-option [value]="-1">(show this question first)</mat-option>
         <div *ngFor="let question of questionsBackup">
-            <mat-option *ngIf="question.questionID != data.reorderQuestion.questionID" [value]="question.questionID">
+            <mat-option *ngIf="question.id != data.reorderQuestion.id" [value]="question.id">
                 {{question.questionText}}
             </mat-option>
         </div>

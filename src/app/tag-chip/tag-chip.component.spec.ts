@@ -1,7 +1,6 @@
 import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatChipsModule } from '@angular/material/chips';
-import { ApiModule } from 'angular-client';
 
 import { TagChipComponent } from './tag-chip.component';
 
@@ -13,7 +12,6 @@ describe('TagChipComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [TagChipComponent],
       imports: [
-        ApiModule,
         HttpClientModule,
         MatChipsModule
       ]

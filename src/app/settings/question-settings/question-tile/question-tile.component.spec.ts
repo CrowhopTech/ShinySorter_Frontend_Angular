@@ -6,7 +6,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ApiModule } from 'angular-client';
 
 import { QuestionTileComponent } from './question-tile.component';
 
@@ -18,7 +17,6 @@ describe('QuestionTileComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [QuestionTileComponent],
       imports: [
-        ApiModule,
         HttpClientModule,
         MatDialogModule,
         MatChipsModule,

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { DefaultService as ShinySorterService, QuestionEntry, QuestionPatch } from 'angular-client';
 import { APIUtilityService } from 'src/app/apiutility.service';
+import { QuestionOption, QuestionOptionCreate, QuestionPatch, QuestionPatchWithOptions, QuestionWithOptions } from 'src/app/supabase.service';
 import { QuestionEditDialogComponent } from '../question-edit-dialog/question-edit-dialog.component';
 import { QuestionDeleteDialogComponent, QuestionReorderDialogComponent } from '../question-settings.component';
 
@@ -12,20 +12,20 @@ import { QuestionDeleteDialogComponent, QuestionReorderDialogComponent } from '.
 })
 export class QuestionTileComponent implements OnInit {
 
-  @Input() question?: QuestionEntry
+  @Input() question?: QuestionWithOptions
 
   public get questionTagIDs(): number[] | undefined {
-    if (this.question == undefined) {
+    if (this.question == undefined || this.question.questionoptions == null) {
       return undefined
     }
-    return this.question.tagOptions.map(to => to.tagID)
+    return this.question.questionoptions.filter(to => to.tagid != null).map(to => to.tagid as number)
   }
 
-  @Output() updateQuestion = new EventEmitter<QuestionPatch>();
+  @Output() updateQuestion = new EventEmitter<{ question: QuestionPatch, options?: QuestionOptionCreate[] }>();
   @Output() deleteQuestion = new EventEmitter<number>();
   @Output() reorderQuestions = new EventEmitter<number[]>();
 
-  constructor(private apiService: ShinySorterService, public apiUtility: APIUtilityService, private dialog: MatDialog) { }
+  constructor(public apiUtility: APIUtilityService, private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.apiUtility.updateTagCache()
@@ -52,7 +52,7 @@ export class QuestionTileComponent implements OnInit {
       data: {
         question: this.question
       }
-    }).afterClosed().subscribe((result?: QuestionPatch) => {
+    }).afterClosed().subscribe((result?: { question: QuestionPatchWithOptions, options?: QuestionOptionCreate[] }) => {
       if (result && this.question) {
         this.updateQuestion.emit(result)
       }
@@ -70,7 +70,7 @@ export class QuestionTileComponent implements OnInit {
       }
     }).afterClosed().subscribe((result: boolean) => {
       if (result && this.question) {
-        this.deleteQuestion.emit(this.question.questionID)
+        this.deleteQuestion.emit(this.question.id)
       }
     });
   }
@@ -80,12 +80,12 @@ export class QuestionTileComponent implements OnInit {
       data: {
         reorderQuestion: this.question
       }
-    }).afterClosed().subscribe((result?: QuestionEntry[]) => {
+    }).afterClosed().subscribe((result?: QuestionWithOptions[]) => {
       if (!result) {
         return
       }
 
-      const newOrder = result.map(q => q.questionID)
+      const newOrder = result.map(q => q.id)
 
       this.reorderQuestions.emit(newOrder)
     });

@@ -1,8 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DefaultService as ShinySorterService, TagEntry, TagsService } from 'angular-client';
 import { FileQuery, SearchMode } from 'src/app/filequery';
-import { APIUtilityService } from 'src/app/apiutility.service';
+import { SupabaseService, Tag } from 'src/app/supabase.service';
 
 @Component({
   selector: 'app-searchinput',
@@ -15,25 +14,24 @@ export class SearchinputComponent implements OnInit {
 
   @Output() queryChanged = new EventEmitter<FileQuery>();
 
-  allTags: TagEntry[] | undefined = undefined
+  allTags: Tag[] | undefined = undefined
   tagsErr: string | undefined = undefined
 
-  constructor(private tagsService: TagsService, private apiUtility: APIUtilityService) { }
+  constructor(private supaService: SupabaseService) { }
 
-  ngOnInit(): void {
-    this.tagsService.listTags().subscribe({
-      next: tags => {
-        this.allTags = tags
-      },
-      error: (err: any) => {
-        this.allTags = []
-        if (err instanceof HttpErrorResponse) {
-          this.tagsErr = err.message
-        } else {
-          this.tagsErr = err.toString()
-        }
+  async ngOnInit(): Promise<void> {
+    let tags = await this.supaService.listTags()
+    if (tags.data != null) {
+      this.allTags = tags.data as Tag[]
+    }
+    if (tags.error != null) {
+      this.allTags = undefined
+      if (tags.error instanceof HttpErrorResponse) {
+        this.tagsErr = tags.error.message;
+      } else {
+        this.tagsErr = tags.error.toString();
       }
-    })
+    }
   }
 
   emitQueryChange(includeTags: number[], excludeTags: number[], includeMode: SearchMode, excludeMode: SearchMode) {

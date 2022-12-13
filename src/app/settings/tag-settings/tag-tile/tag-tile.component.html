@@ -5,8 +5,8 @@
             <form>
                 <!-- Name tag -->
                 <div *ngIf="!editing && !savePending" class="w-fit py-2 px-6 text-xl rounded-full mb-1.5"
-                    [style.background-color]="pastelColorForText(tag.userFriendlyName)">
-                    <b>{{ tag.userFriendlyName }}</b>
+                    [style.background-color]="pastelColorForText(tag.name)">
+                    <b>{{ tag.name }}</b>
                 </div>
                 <mat-form-field *ngIf="editing && !savePending" class="" appearance="fill">
                     <mat-label>Tag Display Name</mat-label>

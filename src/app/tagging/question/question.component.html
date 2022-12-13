@@ -1,18 +1,19 @@
 <mat-spinner *ngIf="question === undefined" diameter="50"></mat-spinner>
-<div *ngIf="question && question.questionID !== -1">
+<div *ngIf="question && question.id !== -1">
     <h1>{{question.questionText}}</h1>
     <mat-radio-group *ngIf="question.mutuallyExclusive" class="flex flex-col">
         <mat-radio-button disableRipple class="py-1" value="-1" (change)="radioChanged($event)"
             [checked]="isTagChecked(-1)">
             (none)</mat-radio-button>
-        <mat-radio-button *ngFor="let option of question.tagOptions" disableRipple class="py-1" value="{{option.tagID}}"
-            (change)="radioChanged($event)" [checked]="isTagChecked(option.tagID)">
-            {{option.optionText}}</mat-radio-button>
+        <mat-radio-button *ngFor="let option of question.questionoptions" disableRipple class="py-1"
+            value="{{option.tagid}}" (change)="radioChanged($event)" [checked]="isTagChecked(option.tagid)">
+            {{option.optiontext}}</mat-radio-button>
     </mat-radio-group>
     <div *ngIf="!question.mutuallyExclusive" class="flex flex-col">
-        <mat-checkbox disableRipple class="py-1" *ngFor="let option of question.tagOptions" value="{{option.tagID}}"
-            (change)="checkboxChanged(option.tagID)($event)" [checked]="isTagChecked(option.tagID)">
-            {{option.optionText}}</mat-checkbox>
+        <mat-checkbox disableRipple class="py-1" *ngFor="let option of question.questionoptions"
+            value="{{option.tagid}}" (change)="checkboxChanged(option.tagid)($event)"
+            [checked]="isTagChecked(option.tagid)">
+            {{option.optiontext}}</mat-checkbox>
     </div>
 </div>
 <div *ngIf="question === null" class="flex flex-col">
