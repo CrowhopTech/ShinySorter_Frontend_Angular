@@ -33,12 +33,5 @@ export class SearchingComponent implements OnInit {
           this.queryManager.viewClose()
         }
       })
-
-    // this.apiService.listTags().subscribe({
-    //   next: tags => {
-    //     tags.forEach(tag => { if (tag.id && tag.userFriendlyName) { this.tagsMap?.set(tag.id, tag.userFriendlyName) } })
-    //   },
-    //   error: err => { this.tagsFetchError = err.toString() }
-    // })
   }
 }

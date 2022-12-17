@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { EventEmitter, Injectable, Output } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SearchMode, FileQuery } from '../filequery';
@@ -230,7 +231,7 @@ export class QueryManagerService {
     this.searchResultReady.emit()
   }
 
-  constructor(private router: Router, private route: ActivatedRoute, private supaService: SupabaseService) {
+  constructor(private router: Router, private route: ActivatedRoute, private supaService: SupabaseService, private snackbar: MatSnackBar) {
     this._query = new FileQuery([], [], "all", "all", true)
     this._viewingFileID = -1
     this._viewingFile = undefined

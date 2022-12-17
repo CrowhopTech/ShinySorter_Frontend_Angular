@@ -23,6 +23,11 @@ export class QuestionSettingsComponent implements OnInit {
     return ids
   }
 
+  private _fetchError?: Error = undefined
+  public get fetchError(): Error | undefined {
+    return this._fetchError
+  }
+
   constructor(private supaService: SupabaseService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
 
   ngOnInit(): void {
@@ -32,13 +37,15 @@ export class QuestionSettingsComponent implements OnInit {
   async refreshQuestions() {
     const { data: tagData, error: tagError } = await this.supaService.listTags()
     if (tagError) {
-      throw tagError
+      this._fetchError = new Error(`Failed to fetch tags: ${tagError}`)
+      return
     }
     const tags = tagData as Tag[]
 
     const { data: questionData, error: questionError } = await this.supaService.listQuestions()
     if (questionError) {
-      throw questionError
+      this._fetchError = new Error(`Failed to fetch questions: ${questionError}`)
+      return
     }
     this.questions = questionData as QuestionWithOptions[]
     tags.forEach(tag => this.allUnusedTags?.set(tag.id, tag))
@@ -65,7 +72,8 @@ export class QuestionSettingsComponent implements OnInit {
           mutuallyExclusive: result.question.mutuallyExclusive,
         }, result.options)
         if (error) {
-          throw error
+          this.snackbar.open(`Failed to create question: ${error}`, undefined, { duration: 7500 })
+          return
         }
         this.refreshQuestions()
         this.snackbar.open("Question created successfully", undefined, {
@@ -79,7 +87,8 @@ export class QuestionSettingsComponent implements OnInit {
     const patch = $event as QuestionPatch
     const error = await this.supaService.patchQuestion(id, patch, options)
     if (error) {
-      throw error
+      this.snackbar.open(`Failed to update question: ${error}`, undefined, { duration: 7500 })
+      return
     }
     this.refreshQuestions()
     this.snackbar.open("Question updated successfully", undefined, {
@@ -90,7 +99,8 @@ export class QuestionSettingsComponent implements OnInit {
   async deleteQuestion(id: number) {
     const error = await this.supaService.deleteQuestion(id)
     if (error) {
-      throw error
+      this.snackbar.open(`Failed to delete question: ${error}`, undefined, { duration: 7500 })
+      return
     }
     this.refreshQuestions()
     this.snackbar.open("Question deleted successfully", undefined, {
@@ -101,7 +111,8 @@ export class QuestionSettingsComponent implements OnInit {
   async reorderQuestions(newOrder: number[]) {
     const error = await this.supaService.reorderQuestions(newOrder)
     if (error) {
-      throw error
+      this.snackbar.open(`Failed to reorder questions: ${error}`, undefined, { duration: 7500 })
+      return
     }
     this.refreshQuestions()
     this.snackbar.open("Question reordered successfully", undefined, {

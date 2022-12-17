@@ -51,7 +51,6 @@ export class TaggingComponent implements OnInit {
   }
 
   toolbarNavigate(path: string) {
-    this.stopListening = true
     this.router.navigate([path])
   }
 

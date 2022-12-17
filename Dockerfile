@@ -1,5 +1,5 @@
 # Stage 1: Compile and Build angular codebase
-FROM node:latest as build
+FROM node:alpine as build
 RUN npm install -g @angular/cli
 
 WORKDIR /usr/local/app

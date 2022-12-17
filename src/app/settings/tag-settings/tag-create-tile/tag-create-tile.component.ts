@@ -33,7 +33,9 @@ export class TagCreateTileComponent implements OnInit {
       description: this.newDescription,
     })
     if (error) {
-      throw error
+      this.snackbar.open(`Failed to create tag ${this.newName}: ${error}`, undefined, { duration: 7500 })
+      this.savePending = false
+      return
     }
     this.editing = false
     this.savePending = false

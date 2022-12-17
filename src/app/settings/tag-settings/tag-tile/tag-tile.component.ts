@@ -68,6 +68,8 @@ export class TagTileComponent implements OnInit {
       description: this.newDescription
     })
     if (error) {
+      this.snackbar.open(`Failed to update tag ${this.tag.name}: ${error}`, undefined, { duration: 7500 })
+      this.savePending = false
       throw error
     }
     this.editing = false
@@ -88,7 +90,8 @@ export class TagTileComponent implements OnInit {
       if (result && this.tag) {
         const { error } = await this.supaService.deleteTag(this.tag.id)
         if (error) {
-          throw error
+          this.snackbar.open(`Failed to delete tag ${this.tag.name}: ${error}`, undefined, { duration: 7500 })
+          this.savePending = false
         }
         this.refetchRequired.emit()
       }
