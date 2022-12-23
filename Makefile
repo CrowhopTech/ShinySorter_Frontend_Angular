@@ -10,4 +10,5 @@ docker-push: docker-web docker-query-server
 
 supagen:
 	supabase gen types typescript --local > src/schema.ts
-	cp src/schema.ts queryserver/src/schema.ts
+	cp src/schema.ts src/queryserver/src/schema.ts
+	cp src/schema.ts src/importer/src/schema.ts
