@@ -1,15 +1,19 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { FileObject } from '@supabase/storage-js/src/lib/types'
-import { Database } from './schema'
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { FileObject } from '@supabase/storage-js/src/lib/types';
+import { Database } from './schema';
+import { execSync } from 'child_process';
 import md5File from 'md5-file';
+import { Magic, MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING } from 'mmmagic';
+import { FileMetadata, getFileMetadata } from './filemeta';
 
-type FileEntry = Database['public']['Tables']['files']['Row']
-type FilePatch = Database['public']['Tables']['files']['Update']
-type FileCreate = Database['public']['Tables']['files']['Insert']
+type FileEntry = Database['public']['Tables']['files']['Row'];
+type FilePatch = Database['public']['Tables']['files']['Update'];
+type FileCreate = Database['public']['Tables']['files']['Insert'];
 
-const importDir = "./import"
+const importDir = "./import";
 
 const scanInterval = 1000;
 
@@ -17,32 +21,100 @@ const runningFiles: Set<string> = new Set<string>();
 const aborts: Set<string> = new Set<string>();
 
 var supabaseClient: SupabaseClient | undefined;
-const storageBucketName = "test-bucket"
+var storageBucketName = "";
+var thumbsBucketName = "";
 
-const timer = (ms: number) => new Promise(res => setTimeout(res, ms));
+const thumbnailWidth = 640;
 
 function checkFileAborted(path: string, reject: (reason?: any) => void): boolean {
     if (aborts.has(path)) {
-        reject(`File ${path} aborted`)
-        return true
+        reject(`File ${path} aborted`);
+        return true;
     }
-    return false
+    return false;
 }
 
-async function getStorageRow(filename: string): Promise<{ data: FileObject, error: null } | { data: null, error: any }> {
-    if (!supabaseClient) return { data: null, error: "supabaseClient is not set" }
+async function getStorageRow(filename: string): Promise<{ data: FileObject | null, error: null; } | { data: null, error: any; }> {
+    if (!supabaseClient) return { data: null, error: "supabaseClient is not set" };
 
     const { data: existingStorageResult, error: existingStorageError } = await supabaseClient.storage.from(storageBucketName).list(undefined, {
         search: filename
-    })
+    });
     if (existingStorageError) {
-        return { data: null, error: existingStorageError }
+        return { data: null, error: existingStorageError };
     }
     if (existingStorageResult.length != 1) {
-        return { data: null, error: `received ${existingStorageResult.length} rows, expected 1` }
+        return { data: null, error: `received ${existingStorageResult.length} rows, expected 1` };
     }
 
-    return { data: existingStorageResult[0], error: null }
+    return { data: existingStorageResult[0], error: null };
+}
+
+// checkFileEntryForExisting will check if a row already exists in the files table
+// If it does, we will just update it, and if it doesn't, we'll create a new entry.
+async function checkFileEntryForExisting(supabaseClient: SupabaseClient, path: string, storageID: string, fileMetadata: FileMetadata) {
+    // Get file entry for this storage row
+    const { data: existingFileResult, error: existingFileError } = await supabaseClient.from("files").select("*").eq("storageID", storageID).maybeSingle();
+    if (existingFileError) {
+        throw new Error(`Failed to get existing file entry: ${existingFileError.message}`);
+    }
+    console.log(`Existing file row: ${JSON.stringify(existingFileResult)}`);
+    if (existingFileResult != null) {
+        // If file entry exists and md5sum conflicts: ret error
+        if (existingFileResult["md5sum"] != "" && existingFileResult["md5sum"] != fileMetadata.md5sum) {
+            throw new Error(`md5sum '${fileMetadata.md5sum}' of new file does not match existing md5sum '${existingFileResult["md5sum"]}'in Files table`);
+        }
+        // Set md5sum and mime type just to be sure
+        const filePatch: FilePatch = {
+            id: existingFileResult["id"],
+            md5sum: fileMetadata.md5sum,
+            mimeType: fileMetadata.mimeType,
+        };
+        // If file entry exists: just make sure md5sum is up to date and any other base metadata we care about
+        const { error: patchError } = await supabaseClient.from("files").update(filePatch);
+        if (patchError) {
+            throw new Error(`Failed to patch existing file entry: ${patchError.message}`);
+        }
+    } else {
+        // If file entry DNE: insert row
+        const newFileEntry: FileCreate = {
+            storageID: storageID,
+            md5sum: fileMetadata.md5sum,
+            mimeType: fileMetadata.mimeType,
+            hasBeenTagged: false,
+            filename: path
+        };
+        const { error: createError } = await supabaseClient.from("files").insert(newFileEntry);
+        if (createError) {
+            throw new Error(`Failed to create new file entry: ${createError.message}`);
+        }
+    }
+}
+
+// tryGenerateThumbnail will attempt to generate a thumbnail for the given file, catching all errors and printing
+// as thumbnails failing is a non-fatal operation
+async function tryGenerateThumbnail(supabaseClient: SupabaseClient, storageID: string, basePath: string, fullPath: string, fileMetadata: FileMetadata) {
+    // Generate thumbnail
+    const thumbPath = `/tmp/shinythumb-${basePath}.png`;
+    try {
+        if (storageID == undefined) {
+            throw new Error("storageID is somehow undefined (should never happen)");
+        }
+
+        execSync(generateFfmpegCommand(fullPath, thumbPath, fileMetadata.mimeType != undefined && fileMetadata.mimeType.startsWith("video"), thumbnailWidth));
+
+        const thumbContents = fs.readFileSync(thumbPath);
+
+        // Upload thumbnail
+        const { error: uploadError } = await supabaseClient.storage.from(thumbsBucketName).upload(storageID, thumbContents);
+        if (uploadError) {
+            throw uploadError;
+        }
+    } catch (e: any) {
+        if (e as Error && !e.message.includes("already exists")) {
+            console.error(`Failed to create thumbnail for file '${basePath}', continuing: ${e.message}`);
+        }
+    }
 }
 
 function doImport(basePath: string) {
@@ -52,124 +124,108 @@ function doImport(basePath: string) {
 
         // Do the import, check aborts map at each step
         const filepath = path.join(importDir, basePath);
-        const fileContents = fs.readFileSync(filepath)
+        const fileContents = fs.readFileSync(filepath);
 
         // Uncomment below if we change how we read files (if we add an await)
         // if (checkFileAborted(basePath, reject)) return;
 
-        // Get file md5sum
-        const md5sum = await md5File(filepath)
+        const { md5sum, mimeType } = await getFileMetadata(filepath);
+        var storageID: string | undefined = undefined;
 
         if (checkFileAborted(basePath, reject)) return;
 
         // Try to upload
-        const { data: uploadResult, error: uploadError } = await supabaseClient.storage.from(storageBucketName).upload(basePath, fileContents)
+        const { data: uploadResult, error: uploadError } = await supabaseClient.storage.from(storageBucketName).upload(basePath, fileContents);
         if (uploadError) {
             // If error and error not "already exists": ret error
             if (!uploadError.message.includes("already exists")) {
-                reject(`Failed to upload file to supabase storage: ${uploadError.message}`)
-                return
+                reject(`Failed to upload file to supabase storage: ${uploadError.message}`);
+                return;
             }
 
             if (checkFileAborted(basePath, reject)) return;
 
             // Error is "already exists":
             // Get existing storage row entry
-            const { data: existingStorageResult, error: existingStorageError } = await getStorageRow(basePath)
+            const { data: existingStorageResult, error: existingStorageError } = await getStorageRow(basePath);
             if (existingStorageError) {
-                reject(`Failed to get existing storage entry: ${existingStorageError.message}`)
-                return
+                reject(`Failed to get existing storage entry: ${existingStorageError.message}`);
+                return;
             }
             if (!existingStorageResult) {
-                reject(`Failed to get existing storage entry: not found`)
-                return
+                reject(`Failed to get existing storage entry: not found`);
+                return;
             }
+            storageID = existingStorageResult.id;
 
             if (checkFileAborted(basePath, reject)) return;
 
-            // Get file entry for this storage row
-            const { data: existingFileResult, error: existingFileError } = await supabaseClient.from("files").select("*").eq("storageID", existingStorageResult.id).maybeSingle()
-            if (existingFileError) {
-                reject(`Failed to get existing file entry: ${existingFileError.message}`)
-                return
-            }
-            console.log(`Existing file row: ${JSON.stringify(existingFileResult)}`)
-            if (existingFileResult != null) {
-                // If file entry exists and md5sum conflicts: ret error
-                if (existingFileResult["md5sum"] != "" && existingFileResult["md5sum"] != md5sum) {
-                    reject(`md5sum '${md5sum}' of new file does not match existing md5sum '${existingFileResult["md5sum"]}'in Files table`)
-                    return
-                }
-                // Set md5sum just to be sure
-                const filePatch: FilePatch = {
-                    id: existingFileResult["id"],
-                    md5sum: md5sum
-                }
-                // If file entry exists: just make sure md5sum is up to date and any other base metadata we care about
-                const { error: patchError } = await supabaseClient.from("files").update(filePatch)
-                if (patchError) {
-                    reject(`Failed to patch existing file entry: ${patchError.message}`)
-                    return
-                }
-            } else {
-                // If file entry DNE: insert row
-                const newFileEntry: FileCreate = {
-                    storageID: existingStorageResult.id,
-                    md5sum: md5sum,
-                    hasBeenTagged: false
-                }
-                const { error: createError } = await supabaseClient.from("files").insert(newFileEntry)
-                if (createError) {
-                    reject(`Failed to create new file entry: ${createError.message}`)
-                    return
-                }
-            }
+            await checkFileEntryForExisting(supabaseClient, basePath, storageID, { md5sum, mimeType });
         } else {
             // Get newly created storage row entry
-            const { data: newStorageResult, error: newStorageError } = await getStorageRow(uploadResult.path)
+            const { data: newStorageResult, error: newStorageError } = await getStorageRow(uploadResult.path);
             if (newStorageError) {
-                reject(`Failed to get newly created storage entry: ${newStorageError.message}`)
-                return
+                reject(`Failed to get newly created storage entry: ${newStorageError.message}`);
+                return;
             }
             if (!newStorageResult) {
-                reject(`Failed to get newly created storage entry: not found`)
-                return
+                reject(`Failed to get newly created storage entry: not found`);
+                return;
             }
+
+            storageID = newStorageResult.id;
             // If no error:
             //   Create file entry
             const newFileEntry: FileCreate = {
                 storageID: newStorageResult.id,
                 md5sum: md5sum,
-                hasBeenTagged: false
-            }
-            const { error: createError } = await supabaseClient.from("files").insert(newFileEntry)
+                mimeType: mimeType,
+                hasBeenTagged: false,
+                filename: basePath
+            };
+            const { error: createError } = await supabaseClient.from("files").insert(newFileEntry);
             if (createError) {
-                reject(`Failed to create new file entry: ${createError.message}`)
-                return
+                reject(`Failed to create new file entry: ${createError.message}`);
+                return;
             }
         }
 
+        await tryGenerateThumbnail(supabaseClient, storageID, basePath, filepath, { md5sum, mimeType });
+
         // Remove local file
-        fs.rmSync(filepath)
+        fs.rmSync(filepath);
 
         resolve();
-    })
+    });
+}
+
+function generateFfmpegCommand(inputPath: string, outputPath: string, isVideo: boolean, targetWidth: number): string {
+    // -i: Input file (can be either an image or a video. If video, specify the starting frame)
+    // -ss: Seek to the specified time (in seconds) in the input file
+    // -vframes: Number of frames to extract
+    // -vf: Video filter to use (scale)
+    const args = ["ffmpeg", "-y", "-i", `'${inputPath}'`, "-vframes", "1", "-vf", `scale=${targetWidth}:-1`];
+    if (isVideo) {
+        args.push("-ss", "00:00:00");
+    }
+    args.push(`'${outputPath}'`);
+    return args.join(" ");
 }
 
 function checkSizeMatch(filepath: string, lastSize: number, resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void) {
     try {
         const stats = fs.statSync(filepath);
-        console.log(`Old size for file ${filepath} is ${lastSize}, is now ${stats.size}`)
+        console.log(`Old size for file ${filepath} is ${lastSize}, is now ${stats.size}`);
         if (stats.size == lastSize) {
-            resolve()
-            return
+            resolve();
+            return;
         }
         setTimeout(() => {
-            checkSizeMatch(filepath, stats.size, resolve, reject)
-        }, scanInterval)
+            checkSizeMatch(filepath, stats.size, resolve, reject);
+        }, scanInterval);
     } catch (e) {
-        reject(`Failed to get stats for file: ${e}`)
-        return
+        reject(`Failed to get stats for file: ${e}`);
+        return;
     }
 }
 
@@ -181,8 +237,8 @@ function debounceFileSize(basePath: string) {
         setTimeout(() => {
             console.log(`Doing initial debounce check for ${basePath}`);
             checkSizeMatch(filepath, 0, resolve, reject);
-        }, scanInterval)
-    })
+        }, scanInterval);
+    });
 }
 
 function fileAdded(basePath: string) {
@@ -191,54 +247,83 @@ function fileAdded(basePath: string) {
         debounceFileSize(basePath).then(_ => {
             doImport(basePath).then(_ => {
                 // Success: remove from promises
-                console.info(`File import for '${basePath}' promise success!`)
+                console.info(`File import for '${basePath}' promise success!`);
             }, (reason: any) => {
                 // Rejected: console log or something
-                console.error(`File import promise rejected: ${reason}`)
+                console.error(`File import promise rejected: ${reason}`);
             }).finally(() => {
                 // Remove from promises and aborts in finally
-                aborts.delete(basePath)
-                runningFiles.delete(basePath)
-            })
+                aborts.delete(basePath);
+                runningFiles.delete(basePath);
+            });
         }, reason => {
-            console.error(`Failed to debounce file size for file '${basePath}': ${reason}`)
-        })
+            console.error(`Failed to debounce file size for file '${basePath}': ${reason}`);
+        });
 
-        runningFiles.add(basePath)
+        runningFiles.add(basePath);
     }
 }
 
 function fileRemoved(path: string) {
     // If no promise for this file, do nothing (means it already finished)
     if (!runningFiles.has(path)) {
-        return
+        return;
     }
 
     // Add to aborts
-    aborts.add(path)
+    aborts.add(path);
+}
+
+function parseEnvVars(): boolean {
+    const address = process.env["SUPABASE_ADDRESS"];
+    if (!address || address.length == 0) {
+        console.error("SUPABASE_ADDRESS is required");
+        return false;
+    }
+
+    const key = process.env["SUPABASE_KEY"];
+    if (!key || key.length == 0) {
+        console.error("SUPABASE_KEY is required");
+        return false;
+    }
+
+    const bn = process.env["BUCKET_NAME"];
+    if (!bn || bn.length == 0) {
+        console.error("BUCKET_NAME is required");
+        return false;
+    }
+    storageBucketName = bn;
+
+    const tbn = process.env["THUMBS_BUCKET_NAME"];
+    if (!tbn || tbn.length == 0) {
+        console.error("THUMBS_BUCKET_NAME is required");
+        return false;
+    }
+    thumbsBucketName = tbn;
+
+    // Create a single supabase client for interacting with your database
+    const supabase = createClient(address, key);
+
+    supabaseClient = supabase;
+
+    return true;
 }
 
 function main() {
-    // Create a single supabase client for interacting with your database
-    const anonKey = process.env["SUPABASE_ANON_KEY"]
-    if (!anonKey) {
-        console.error("SUPABASE_ANON_KEY is required")
-        return
+    if (!parseEnvVars()) {
+        return;
     }
-    const supabase = createClient('http://192.168.1.4:8000', anonKey)
-
-    supabaseClient = supabase;
 
     // Create the import directory if it doesn't exist
     fs.mkdirSync(importDir, { recursive: true });
 
     fs.readdir(importDir, undefined, (err, files) => {
         if (err) {
-            console.error(`Failed to list files at program start (continuing, but may miss existing files): ${err}`)
-            return
+            console.error(`Failed to list files at program start (continuing, but may miss existing files): ${err}`);
+            return;
         }
-        files.forEach(fileAdded)
-    })
+        files.forEach(fileAdded);
+    });
 
     fs.watch(importDir, (type, filename) => {
         if (type == 'change') {
@@ -246,11 +331,11 @@ function main() {
         }
         const filepath = path.join(importDir, filename);
         if (fs.existsSync(filepath)) {
-            fileAdded(filename)
+            fileAdded(filename);
         } else {
-            fileRemoved(filename)
+            fileRemoved(filename);
         }
-    })
+    });
 }
 
 main();

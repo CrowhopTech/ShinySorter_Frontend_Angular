@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { distinctUntilChanged, filter, fromEvent, map } from 'rxjs';
 import { APIUtilityService } from '../apiutility.service';
+import { SupabaseService } from '../supabase.service';
 import { QueryManagerService } from './querymanager.service';
 
 @Component({
@@ -10,17 +11,17 @@ import { QueryManagerService } from './querymanager.service';
   styleUrls: ['./searching.component.sass']
 })
 export class SearchingComponent implements OnInit {
-  viewerInfoOpen: boolean = false
+  viewerInfoOpen: boolean = false;
 
-  constructor(public router: Router, public queryManager: QueryManagerService, public apiUtility: APIUtilityService) { }
+  constructor(public router: Router, public queryManager: QueryManagerService, public apiUtility: APIUtilityService, public supaService: SupabaseService) { }
 
   get currentFileTags(): number[] | undefined {
-    return this.queryManager.viewingFile?.filetags.map(t => t.tagid)
+    return this.queryManager.viewingFile?.filetags.map(t => t.tagid);
   }
 
   async ngOnInit(): Promise<void> {
-    await this.queryManager.ngOnInit()
-    this.apiUtility.updateTagCache()
+    await this.queryManager.ngOnInit();
+    this.apiUtility.updateTagCache();
 
     fromEvent(document, 'keydown').
       pipe(
@@ -30,8 +31,8 @@ export class SearchingComponent implements OnInit {
         filter((e: KeyboardEvent) => e.key == "Escape")).
       subscribe((_: KeyboardEvent) => {
         if (this.queryManager.viewingFileID != -1) {
-          this.queryManager.viewClose()
+          this.queryManager.viewClose();
         }
-      })
+      });
   }
 }

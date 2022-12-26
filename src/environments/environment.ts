@@ -4,9 +4,9 @@
 
 export const environment = {
   production: false,
-  supabaseUrl: 'http://localhost:54321',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU',
-  queryServerUrl: 'http://localhost:6060'
+  supabaseUrl: 'http://192.168.1.4:8000',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICAgInJvbGUiOiAiYW5vbiIsCiAgICAiaXNzIjogInN1cGFiYXNlIiwKICAgICJpYXQiOiAxNjcwODMyMDAwLAogICAgImV4cCI6IDE4Mjg1OTg0MDAKfQ.yARwbbrX7WiYT1exzX1Vlwtg06iE-785JsfydKDAdwA',
+  // queryServerUrl: 'http://localhost:6060'
 };
 
 /*

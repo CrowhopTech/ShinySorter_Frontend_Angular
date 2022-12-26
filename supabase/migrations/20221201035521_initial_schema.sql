@@ -2,7 +2,9 @@ CREATE TABLE public.files (
     id bigint NOT NULL,
     md5sum text DEFAULT ''::text NOT NULL,
     "hasBeenTagged" boolean DEFAULT false NOT NULL,
-    "storageID" uuid NOT NULL
+    "storageID" uuid NOT NULL,
+    "mimeType" text DEFAULT ''::text NOT NULL,
+    "filename" text DEFAULT ''::text NOT NULL
 );
 COMMENT ON TABLE public.files IS 'All files uploaded to the database';
 
@@ -83,3 +85,19 @@ ALTER TABLE ONLY public.questionoptions
 ALTER TABLE ONLY public.questionoptions
     ADD CONSTRAINT questionoptions_tagid_fkey FOREIGN KEY (tagid) REFERENCES public.tags(id);
 ALTER TABLE public.questionoptions ENABLE ROW LEVEL SECURITY;
+
+INSERT INTO storage.buckets (id, name, public) VALUES ('files', 'files', true), ('thumbs', 'thumbs', true);
+
+CREATE FUNCTION storage.update_files_referencing_storageid()
+RETURNS trigger
+LANGUAGE 'plpgsql'
+COST 100
+VOLATILE NOT LEAKPROOF
+AS $BODY$BEGIN
+IF NEW.bucket_id = 'files' THEN
+UPDATE public.files SET "filename" = NEW.name WHERE "storageID" = NEW.id;
+END IF;
+RETURN NEW;
+END;$BODY$;
+
+CREATE TRIGGER update_files_table_when_storage_updates AFTER UPDATE OF name ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.update_files_referencing_storageid();

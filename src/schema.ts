@@ -11,22 +11,28 @@ export interface Database {
     Tables: {
       files: {
         Row: {
-          storageID: string
+          id: number
           md5sum: string
           hasBeenTagged: boolean
-          id: number
+          storageID: string
+          mimeType: string
+          filename: string
         }
         Insert: {
-          storageID: string
+          id?: number
           md5sum?: string
           hasBeenTagged?: boolean
-          id?: number
+          storageID: string
+          mimeType?: string
+          filename?: string
         }
         Update: {
-          storageID?: string
+          id?: number
           md5sum?: string
           hasBeenTagged?: boolean
-          id?: number
+          storageID?: string
+          mimeType?: string
+          filename?: string
         }
       }
       filetags: {

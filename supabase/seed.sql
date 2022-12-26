@@ -1,3 +1,7 @@
+ALTER SEQUENCE public.files_id_seq RESTART WITH 1;
+ALTER SEQUENCE public.tags_id_seq RESTART WITH 1;
+ALTER SEQUENCE public.questions_id_seq RESTART WITH 1;
+
 -- INSERT INTO public.files ("filename", "md5sum", "hasBeenTagged", "mimeType", "hasContent") VALUES
 --     ('Star Citizen 10_9_2021 3_37_54 PM.png',  'ec64c8b906b5babfd86dde4cb7af2429', 'f', 'image/png', 't'),
 --     ('Star Citizen 1_23_2022 2_13_21 PM.png',  '0cd5f0e20fad279848a12a8f1c3f1702', 't', 'image/png', 't'),
@@ -20,25 +24,25 @@
 --     ('Star Citizen 12_22_2021 7_42_56 PM.png', '67b8572a1eb8891b3905ef5afd7c9879', 'f', 'image/png', 't'),
 --     ('Star Citizen 12_22_2021 8_48_06 PM.png', '45109956f12cfc4233e39c20e63ea1ba', 'f', 'image/png', 't');
 
--- INSERT INTO public.tags ("name", "description") VALUES
---     ( 'Star Citizen', 'This file is from Star Citizen'),
---     ( 'Elite Dangerous', 'This file is from Elite: Dangerous'),
---     ( 'Other Vehicle', 'This image contains another vehicle not listed above'),
---     ( 'Cutlass Black', ''),
---     ( 'ROC Miner', ''),
---     ( 'Avenger Titan (Pingu)', ''),
---     ( 'Aurora MR', ''),
---     ( 'In-Cockpit', 'Taken from a seated, in-cockpit position'),
---     ( 'Outside Ship', 'Taken from third person while in a ship seat'),
---     ( 'First-Person Character', 'Taken from a first-person on-foot perspective'),
---     ( 'Third-Person Character', 'Taken from a third-person on-foot perspective'),
---     ( 'Planets', ''),
---     ( 'Stars', ''),
---     ( 'Nebulae', ''),
---     ( 'Stations', ''),
---     ( 'Terrain', ''),
---     ( 'Cities', ''),
---     ( 'Clouds', '');
+INSERT INTO public.tags ("name", "description") VALUES
+    ( 'Star Citizen', 'This file is from Star Citizen'),
+    ( 'Elite Dangerous', 'This file is from Elite: Dangerous'),
+    ( 'Other Vehicle', 'This image contains another vehicle not listed above'),
+    ( 'Cutlass Black', ''),
+    ( 'ROC Miner', ''),
+    ( 'Avenger Titan (Pingu)', ''),
+    ( 'Aurora MR', ''),
+    ( 'In-Cockpit', 'Taken from a seated, in-cockpit position'),
+    ( 'Outside Ship', 'Taken from third person while in a ship seat'),
+    ( 'First-Person Character', 'Taken from a first-person on-foot perspective'),
+    ( 'Third-Person Character', 'Taken from a third-person on-foot perspective'),
+    ( 'Planets', ''),
+    ( 'Stars', ''),
+    ( 'Nebulae', ''),
+    ( 'Stations', ''),
+    ( 'Terrain', ''),
+    ( 'Cities', ''),
+    ( 'Clouds', '');
 
 -- INSERT INTO public.filetags ("fileid", "tagid") VALUES
 --     -- 1
@@ -52,28 +56,28 @@
 --     (9, 1), (9, 9), (9, 4), (9, 16);
 --     -- 10-20
 
--- INSERT INTO public.questions ("orderingID", "questionText", "mutuallyExclusive") VALUES
---     (1, 'Is this picture from a video game?', true),
---     (3, 'Is there a vehicle in this picture?', false),
---     (2, 'What perspective is this picture taken in?', true),
---     (4, 'What scenery is present in this picture?', false);
+INSERT INTO public.questions ("orderingID", "questionText", "mutuallyExclusive") VALUES
+    (1, 'Is this picture from a video game?', true),
+    (3, 'Is there a vehicle in this picture?', false),
+    (2, 'What perspective is this picture taken in?', true),
+    (4, 'What scenery is present in this picture?', false);
 
--- INSERT INTO public.questionoptions ("questionid", "tagid", "optiontext") VALUES
---     (1, 1, 'Star Citizen'),
---     (1, 2, 'Elite: Dangerous'),
---     (2, 3, 'Yes (other vehicle)'),
---     (2, 4, 'Cutlass Black'),
---     (2, 5, 'ROC Miner'),
---     (2, 6, 'Avenger Titan (Pingu!)'),
---     (2, 7, 'Aurora MR'),
---     (3, 8, 'From inside a ship cockpit'),
---     (3, 9, 'Third person ship view'),
---     (3, 10, 'From a first-person character view'),
---     (3, 11, 'From a third-person character view'),
---     (4, 12, 'Planets'),
---     (4, 13, 'Stars'),
---     (4, 14, 'Nebulae'),
---     (4, 15, 'Stations'),
---     (4, 16, 'Terrain'),
---     (4, 17, 'Cities'),
---     (4, 18, 'Clouds');
+INSERT INTO public.questionoptions ("questionid", "tagid", "optiontext") VALUES
+    (1, 1, 'Star Citizen'),
+    (1, 2, 'Elite: Dangerous'),
+    (2, 3, 'Yes (other vehicle)'),
+    (2, 4, 'Cutlass Black'),
+    (2, 5, 'ROC Miner'),
+    (2, 6, 'Avenger Titan (Pingu!)'),
+    (2, 7, 'Aurora MR'),
+    (3, 8, 'From inside a ship cockpit'),
+    (3, 9, 'Third person ship view'),
+    (3, 10, 'From a first-person character view'),
+    (3, 11, 'From a third-person character view'),
+    (4, 12, 'Planets'),
+    (4, 13, 'Stars'),
+    (4, 14, 'Nebulae'),
+    (4, 15, 'Stations'),
+    (4, 16, 'Terrain'),
+    (4, 17, 'Cities'),
+    (4, 18, 'Clouds');

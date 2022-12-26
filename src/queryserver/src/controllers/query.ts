@@ -101,7 +101,7 @@ function parseBooleanParam(req: Request, param: string, def: boolean): boolean {
 
 const getQuery = async (req: Request, res: Response, next: NextFunction) => {
     const pgConnectionString = process.env.PG_CONNECTION_STRING
-    if (!pgConnectionString) {
+    if (!pgConnectionString || pgConnectionString == "") {
         return res.status(500).json("No Postgres connection string provided in client")
     }
     const client = new PGClient({
@@ -123,9 +123,9 @@ const getQuery = async (req: Request, res: Response, next: NextFunction) => {
 
         let selectStatement = getCount ? 'count(*) as filecount' : '*';
 
-        let queryIdx = 3 // 2 params already in there
-        let innerQueryString = `WHERE "hasContent"=$1 AND "hasBeenTagged"=$2`
-        let queryArgs: any[] = [hasContent, tagged]
+        let queryIdx = 2 // 1 params already in there
+        let innerQueryString = `WHERE files."hasBeenTagged"=$1`
+        let queryArgs: any[] = [tagged]
 
         if (continueID.length > 0) {
             innerQueryString += ` AND files.id>\$${queryIdx++}`
@@ -133,11 +133,12 @@ const getQuery = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         let queryString = `SELECT ${selectStatement} FROM (
-            SELECT files.*, ARRAY_AGG(filetags.tagid ORDER BY filetags.tagid) AS tags
+            SELECT files.*, storage.objects.metadata, storage.objects.name, ARRAY_AGG(filetags.tagid ORDER BY filetags.tagid) AS tags
             FROM files
             LEFT JOIN filetags ON filetags.fileid = files.id
+            LEFT JOIN storage.objects ON storage.objects.id = files."storageID" AND storage.objects.bucket_id = 'test-bucket'
             ${innerQueryString}
-            GROUP BY files.id ORDER BY files.id
+            GROUP BY files.id, storage.objects.id ORDER BY files.id
         ) AS fwt`
 
         let tagQueries: string[] = []
@@ -188,7 +189,8 @@ const getQuery = async (req: Request, res: Response, next: NextFunction) => {
             if (!existingTags) {
                 return input
             }
-            input.filetags = existingTags.map(tString => { return { "tagid": parseInt(tString) } })
+            console.log(existingTags)
+            input.filetags = existingTags.filter(t => t != null).map(tString => { return { "tagid": parseInt(tString) } })
             return input
         })
 
