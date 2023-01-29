@@ -49,7 +49,11 @@ export class SupabaseService {
     _session: AuthSession | null = null;
 
     constructor(private appService: AppService, private http: HttpClient, private fileSaver: FileSaverService) {
-        this.supabase = createClient<Database>(environment.supabaseUrl, environment.supabaseKey);
+        if (!appService.settings) {
+            throw new Error("appService settings are not initialized");
+        }
+
+        this.supabase = createClient<Database>(appService.settings.supabaseAddress, appService.settings.supabaseKey);
     }
 
     get session() {

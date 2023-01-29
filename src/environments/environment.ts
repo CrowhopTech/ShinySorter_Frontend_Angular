@@ -2,11 +2,13 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+// DO NOT USE THIS FOR SETTINGS:
+// Settings should all be changed in assets/app.config.json as this can be
+// injected at runtime via Kubernetes secret or other method. Also update
+// app.service.ts if new fields are added.
+
 export const environment = {
-  production: false,
-  supabaseUrl: 'http://192.168.1.4:8000',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICAgInJvbGUiOiAiYW5vbiIsCiAgICAiaXNzIjogInN1cGFiYXNlIiwKICAgICJpYXQiOiAxNjcwODMyMDAwLAogICAgImV4cCI6IDE4Mjg1OTg0MDAKfQ.yARwbbrX7WiYT1exzX1Vlwtg06iE-785JsfydKDAdwA',
-  // queryServerUrl: 'http://localhost:6060'
+  production: false
 };
 
 /*

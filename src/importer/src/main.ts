@@ -1,19 +1,16 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { FileObject } from '@supabase/storage-js/src/lib/types';
 import { Database } from './schema';
 import { execSync } from 'child_process';
-import md5File from 'md5-file';
-import { Magic, MAGIC_MIME_TYPE, MAGIC_MIME_ENCODING } from 'mmmagic';
 import { FileMetadata, getFileMetadata } from './filemeta';
 
 type FileEntry = Database['public']['Tables']['files']['Row'];
 type FilePatch = Database['public']['Tables']['files']['Update'];
 type FileCreate = Database['public']['Tables']['files']['Insert'];
 
-const importDir = "./import";
+var importDir = "./import";
 
 const scanInterval = 1000;
 
@@ -52,7 +49,9 @@ async function getStorageRow(filename: string): Promise<{ data: FileObject | nul
 
 // checkFileEntryForExisting will check if a row already exists in the files table
 // If it does, we will just update it, and if it doesn't, we'll create a new entry.
-async function checkFileEntryForExisting(supabaseClient: SupabaseClient, path: string, storageID: string, fileMetadata: FileMetadata) {
+async function checkFileEntryForExisting(path: string, storageID: string, fileMetadata: FileMetadata) {
+    if (!supabaseClient) throw new Error("supabaseClient is undefined");
+
     // Get file entry for this storage row
     const { data: existingFileResult, error: existingFileError } = await supabaseClient.from("files").select("*").eq("storageID", storageID).maybeSingle();
     if (existingFileError) {
@@ -93,7 +92,9 @@ async function checkFileEntryForExisting(supabaseClient: SupabaseClient, path: s
 
 // tryGenerateThumbnail will attempt to generate a thumbnail for the given file, catching all errors and printing
 // as thumbnails failing is a non-fatal operation
-async function tryGenerateThumbnail(supabaseClient: SupabaseClient, storageID: string, basePath: string, fullPath: string, fileMetadata: FileMetadata) {
+async function tryGenerateThumbnail(storageID: string, basePath: string, fullPath: string, fileMetadata: FileMetadata) {
+    if (!supabaseClient) throw new Error("supabaseClient is undefined");
+
     // Generate thumbnail
     const thumbPath = `/tmp/shinythumb-${basePath}.png`;
     try {
@@ -160,7 +161,7 @@ function doImport(basePath: string) {
 
             if (checkFileAborted(basePath, reject)) return;
 
-            await checkFileEntryForExisting(supabaseClient, basePath, storageID, { md5sum, mimeType });
+            await checkFileEntryForExisting(basePath, storageID, { md5sum, mimeType });
         } else {
             // Get newly created storage row entry
             const { data: newStorageResult, error: newStorageError } = await getStorageRow(uploadResult.path);
@@ -190,7 +191,7 @@ function doImport(basePath: string) {
             }
         }
 
-        await tryGenerateThumbnail(supabaseClient, storageID, basePath, filepath, { md5sum, mimeType });
+        await tryGenerateThumbnail(storageID, basePath, filepath, { md5sum, mimeType });
 
         // Remove local file
         fs.rmSync(filepath);
@@ -301,6 +302,13 @@ function parseEnvVars(): boolean {
     }
     thumbsBucketName = tbn;
 
+    const id = process.env["IMPORT_DIRECTORY"];
+    if (!id || id.length == 0) {
+        console.error("IMPORT_DIRECTORY is required");
+        return false;
+    }
+    importDir = id;
+
     // Create a single supabase client for interacting with your database
     const supabase = createClient(address, key);
 
@@ -313,6 +321,7 @@ function main() {
     if (!parseEnvVars()) {
         return;
     }
+    console.debug("Env vars parsed successfully");
 
     // Create the import directory if it doesn't exist
     fs.mkdirSync(importDir, { recursive: true });
@@ -322,7 +331,12 @@ function main() {
             console.error(`Failed to list files at program start (continuing, but may miss existing files): ${err}`);
             return;
         }
+        if (files.length == 0) {
+            console.debug("No files found in import directory at start");
+            return;
+        }
         files.forEach(fileAdded);
+        console.log(`Added files found in import directory at start: ${files.join(", ")}`);
     });
 
     fs.watch(importDir, (type, filename) => {
@@ -336,6 +350,7 @@ function main() {
             fileRemoved(filename);
         }
     });
+    console.log("Successfully started fs watch");
 }
 
 main();

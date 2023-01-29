@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Ignored so you can put dev credentials in
+src/assets/app.config.json

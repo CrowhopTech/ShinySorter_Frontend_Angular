@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 
 export class AppConfig {
-    contentServerAddress: string = ""
-    queryServerAddress: string = ""
+    supabaseAddress: string = "";
+    supabaseKey: string = "";
+    queryServerAddress: string = "";
 }
 
 @Injectable({
