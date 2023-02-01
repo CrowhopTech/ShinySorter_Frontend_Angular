@@ -249,13 +249,16 @@ function fileAdded(basePath: string) {
             doImport(basePath).then(_ => {
                 // Success: remove from promises
                 console.info(`File import for '${basePath}' promise success!`);
+                aborts.delete(basePath);
+                runningFiles.delete(basePath);
             }, (reason: any) => {
                 // Rejected: console log or something
                 console.error(`File import promise rejected: ${reason}`);
-            }).finally(() => {
-                // Remove from promises and aborts in finally
                 aborts.delete(basePath);
                 runningFiles.delete(basePath);
+                setTimeout(() => {
+                    fileAdded(basePath); // Enqueue another run of this file to retry
+                }, 1000);
             });
         }, reason => {
             console.error(`Failed to debounce file size for file '${basePath}': ${reason}`);
