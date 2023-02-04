@@ -5,6 +5,7 @@ import { FileObject } from '@supabase/storage-js/src/lib/types';
 import { Database } from './schema';
 import { execSync } from 'child_process';
 import { FileMetadata, getFileMetadata } from './filemeta';
+import * as errorout from './errorout';
 
 type FileEntry = Database['public']['Tables']['files']['Row'];
 type FilePatch = Database['public']['Tables']['files']['Update'];
@@ -251,6 +252,9 @@ function debounceFileSize(basePath: string) {
 }
 
 function fileAdded(basePath: string) {
+    if (basePath.endsWith(errorout.errorsFile)) {
+        return;
+    }
     if (!runningFiles.has(basePath)) {
         // Wait for the file size to steady out first, then upload it
         debounceFileSize(basePath).then(_ => {
@@ -259,11 +263,13 @@ function fileAdded(basePath: string) {
                 console.info(`File import for '${basePath}' promise success!`);
                 aborts.delete(basePath);
                 runningFiles.delete(basePath);
+                errorout.clearErrorForFileAndWrite(importDir, basePath);
             }, (reason: any) => {
                 // Rejected: console log or something
                 console.error(`File import promise rejected: ${reason}`);
                 aborts.delete(basePath);
                 runningFiles.delete(basePath);
+                errorout.setErrorForFileAndWrite(importDir, basePath, reason);
                 setTimeout(() => {
                     fileAdded(basePath); // Enqueue another run of this file to retry
                 }, 1000);
@@ -276,14 +282,18 @@ function fileAdded(basePath: string) {
     }
 }
 
-function fileRemoved(path: string) {
+function fileRemoved(basePath: string) {
+    if (basePath.endsWith(errorout.errorsFile)) {
+        return;
+    }
     // If no promise for this file, do nothing (means it already finished)
-    if (!runningFiles.has(path)) {
+    errorout.clearErrorForFileAndWrite(importDir, basePath);
+    if (!runningFiles.has(basePath)) {
         return;
     }
 
     // Add to aborts
-    aborts.add(path);
+    aborts.add(basePath);
 }
 
 function parseEnvVars(): boolean {
