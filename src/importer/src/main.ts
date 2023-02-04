@@ -121,80 +121,88 @@ async function tryGenerateThumbnail(storageID: string, basePath: string, fullPat
 function doImport(basePath: string) {
     // Run import and at each step, check aborts (throw if aborted, include rollback behavior)
     return new Promise<void>(async (resolve, reject) => {
-        if (!supabaseClient) return;
-
-        // Do the import, check aborts map at each step
-        const filepath = path.join(importDir, basePath);
-        const fileContents = fs.readFileSync(filepath);
-
-        // Uncomment below if we change how we read files (if we add an await)
-        // if (checkFileAborted(basePath, reject)) return;
-
-        const { md5sum, mimeType } = await getFileMetadata(filepath);
-        var storageID: string | undefined = undefined;
-
-        if (checkFileAborted(basePath, reject)) return;
-
-        // Try to upload
-        const { data: uploadResult, error: uploadError } = await supabaseClient.storage.from(storageBucketName).upload(basePath, fileContents);
-        if (uploadError) {
-            // If error and error not "already exists": ret error
-            if (!uploadError.message.includes("already exists")) {
-                reject(`Failed to upload file to supabase storage: ${uploadError.message}`);
+        try {
+            if (!supabaseClient) {
+                reject("Supabase client is not initialized");
                 return;
             }
+
+            // Do the import, check aborts map at each step
+            const filepath = path.join(importDir, basePath);
+            const fileContents = fs.readFileSync(filepath);
+
+            // Uncomment below if we change how we read files (if we add an await)
+            // if (checkFileAborted(basePath, reject)) return;
+
+            const { md5sum, mimeType } = await getFileMetadata(filepath);
+            var storageID: string | undefined = undefined;
 
             if (checkFileAborted(basePath, reject)) return;
 
-            // Error is "already exists":
-            // Get existing storage row entry
-            const { data: existingStorageResult, error: existingStorageError } = await getStorageRow(basePath);
-            if (existingStorageError) {
-                reject(`Failed to get existing storage entry: ${existingStorageError.message}`);
-                return;
-            }
-            if (!existingStorageResult) {
-                reject(`Failed to get existing storage entry: not found`);
-                return;
-            }
-            storageID = existingStorageResult.id;
+            // Try to upload
+            const { data: uploadResult, error: uploadError } = await supabaseClient.storage.from(storageBucketName).upload(basePath, fileContents);
+            if (uploadError) {
+                // If error and error not "already exists": ret error
+                if (!uploadError.message.includes("already exists")) {
+                    reject(`Failed to upload file to supabase storage: ${uploadError.message}`);
+                    return;
+                }
 
-            if (checkFileAborted(basePath, reject)) return;
+                if (checkFileAborted(basePath, reject)) return;
 
-            await checkFileEntryForExisting(basePath, storageID, { md5sum, mimeType });
-        } else {
-            // Get newly created storage row entry
-            const { data: newStorageResult, error: newStorageError } = await getStorageRow(uploadResult.path);
-            if (newStorageError) {
-                reject(`Failed to get newly created storage entry: ${newStorageError.message}`);
-                return;
-            }
-            if (!newStorageResult) {
-                reject(`Failed to get newly created storage entry: not found`);
-                return;
+                // Error is "already exists":
+                // Get existing storage row entry
+                const { data: existingStorageResult, error: existingStorageError } = await getStorageRow(basePath);
+                if (existingStorageError) {
+                    reject(`Failed to get existing storage entry: ${existingStorageError.message}`);
+                    return;
+                }
+                if (!existingStorageResult) {
+                    reject(`Failed to get existing storage entry: not found`);
+                    return;
+                }
+                storageID = existingStorageResult.id;
+
+                if (checkFileAborted(basePath, reject)) return;
+
+                await checkFileEntryForExisting(basePath, storageID, { md5sum, mimeType });
+            } else {
+                // Get newly created storage row entry
+                const { data: newStorageResult, error: newStorageError } = await getStorageRow(uploadResult.path);
+                if (newStorageError) {
+                    reject(`Failed to get newly created storage entry: ${newStorageError.message}`);
+                    return;
+                }
+                if (!newStorageResult) {
+                    reject(`Failed to get newly created storage entry: not found`);
+                    return;
+                }
+
+                storageID = newStorageResult.id;
+                // If no error:
+                //   Create file entry
+                const newFileEntry: FileCreate = {
+                    storageID: newStorageResult.id,
+                    md5sum: md5sum,
+                    mimeType: mimeType,
+                    hasBeenTagged: false,
+                    filename: basePath
+                };
+                const { error: createError } = await supabaseClient.from("files").insert(newFileEntry);
+                if (createError) {
+                    reject(`Failed to create new file entry: ${createError.message}`);
+                    return;
+                }
             }
 
-            storageID = newStorageResult.id;
-            // If no error:
-            //   Create file entry
-            const newFileEntry: FileCreate = {
-                storageID: newStorageResult.id,
-                md5sum: md5sum,
-                mimeType: mimeType,
-                hasBeenTagged: false,
-                filename: basePath
-            };
-            const { error: createError } = await supabaseClient.from("files").insert(newFileEntry);
-            if (createError) {
-                reject(`Failed to create new file entry: ${createError.message}`);
-                return;
-            }
+            await tryGenerateThumbnail(storageID, basePath, filepath, { md5sum, mimeType });
+
+            // Remove local file
+            fs.rmSync(filepath);
+        } catch (e: any) {
+            reject(`Failed to import file: ${e}`);
         }
 
-        await tryGenerateThumbnail(storageID, basePath, filepath, { md5sum, mimeType });
-
-        // Remove local file
-        fs.rmSync(filepath);
 
         resolve();
     });
