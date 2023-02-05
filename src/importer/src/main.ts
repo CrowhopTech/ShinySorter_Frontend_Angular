@@ -252,7 +252,9 @@ function debounceFileSize(basePath: string) {
 }
 
 function fileAdded(basePath: string) {
-    if (basePath.endsWith(errorout.errorsFile)) {
+    // Ignore the error output file
+    // Ignore hidden files
+    if (basePath.endsWith(errorout.errorsFile) || path.basename(basePath).startsWith(".")) {
         return;
     }
     if (!runningFiles.has(basePath)) {
