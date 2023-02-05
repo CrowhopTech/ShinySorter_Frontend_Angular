@@ -38,7 +38,7 @@ async function getStorageRow(filename: string): Promise<{ data: FileObject | nul
     const { data: existingStorageResult, error: existingStorageError } = await supabaseClient.storage.from(storageBucketName).list(undefined, {
         search: filename
     });
-    if (existingStorageError) {
+    if (existingStorageError != undefined) {
         return { data: null, error: existingStorageError };
     }
     if (existingStorageResult.length != 1) {
@@ -56,7 +56,7 @@ async function checkFileEntryForExisting(path: string, storageID: string, fileMe
     // Get file entry for this storage row
     const { data: existingFileResult, error: existingFileError } = await supabaseClient.from("files").select("*").eq("storageID", storageID).maybeSingle();
     if (existingFileError) {
-        throw new Error(`Failed to get existing file entry: ${existingFileError.message}`);
+        throw new Error(`Failed to get existing file entry: ${existingFileError}`);
     }
     console.log(`Existing file row: ${JSON.stringify(existingFileResult)}`);
     if (existingFileResult != null) {
@@ -73,7 +73,7 @@ async function checkFileEntryForExisting(path: string, storageID: string, fileMe
         // If file entry exists: just make sure md5sum is up to date and any other base metadata we care about
         const { error: patchError } = await supabaseClient.from("files").update(filePatch);
         if (patchError) {
-            throw new Error(`Failed to patch existing file entry: ${patchError.message}`);
+            throw new Error(`Failed to patch existing file entry: ${patchError}`);
         }
     } else {
         // If file entry DNE: insert row
@@ -86,7 +86,7 @@ async function checkFileEntryForExisting(path: string, storageID: string, fileMe
         };
         const { error: createError } = await supabaseClient.from("files").insert(newFileEntry);
         if (createError) {
-            throw new Error(`Failed to create new file entry: ${createError.message}`);
+            throw new Error(`Failed to create new file entry: ${createError}`);
         }
     }
 }
@@ -114,7 +114,7 @@ async function tryGenerateThumbnail(storageID: string, basePath: string, fullPat
         }
     } catch (e: any) {
         if (e as Error && !e.message.includes("already exists")) {
-            console.error(`Failed to create thumbnail for file '${basePath}', continuing: ${e.message}`);
+            console.error(`Failed to create thumbnail for file '${basePath}', continuing: ${e}`);
         }
     }
 }
@@ -145,7 +145,7 @@ function doImport(basePath: string) {
             if (uploadError) {
                 // If error and error not "already exists": ret error
                 if (!uploadError.message.includes("already exists")) {
-                    reject(`Failed to upload file to supabase storage: ${uploadError.message}`);
+                    reject(`Failed to upload file to supabase storage: ${uploadError}`);
                     return;
                 }
 
@@ -154,8 +154,8 @@ function doImport(basePath: string) {
                 // Error is "already exists":
                 // Get existing storage row entry
                 const { data: existingStorageResult, error: existingStorageError } = await getStorageRow(basePath);
-                if (existingStorageError) {
-                    reject(`Failed to get existing storage entry: ${existingStorageError.message}`);
+                if (existingStorageError != undefined) {
+                    reject(`Failed to get existing storage entry: ${existingStorageError}`);
                     return;
                 }
                 if (!existingStorageResult) {
@@ -171,7 +171,7 @@ function doImport(basePath: string) {
                 // Get newly created storage row entry
                 const { data: newStorageResult, error: newStorageError } = await getStorageRow(uploadResult.path);
                 if (newStorageError) {
-                    reject(`Failed to get newly created storage entry: ${newStorageError.message}`);
+                    reject(`Failed to get newly created storage entry: ${newStorageError}`);
                     return;
                 }
                 if (!newStorageResult) {
@@ -191,7 +191,7 @@ function doImport(basePath: string) {
                 };
                 const { error: createError } = await supabaseClient.from("files").insert(newFileEntry);
                 if (createError) {
-                    reject(`Failed to create new file entry: ${createError.message}`);
+                    reject(`Failed to create new file entry: ${createError}`);
                     return;
                 }
             }
