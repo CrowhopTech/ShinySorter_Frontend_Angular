@@ -72,7 +72,9 @@ export class TaggingComponent implements OnInit {
         // We have an image: handle it and get out!
         const imageID = parseInt(image);
 
-        this.questionManager.establishFile(imageID);
+        if (this.questionManager.currentFileID != imageID) {
+          this.questionManager.establishFile(imageID);
+        }
         return;
       }
 
