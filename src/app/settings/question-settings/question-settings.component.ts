@@ -48,8 +48,16 @@ export class QuestionSettingsComponent implements OnInit {
       return;
     }
     this.questions = questionData as QuestionWithOptions[];
-    tags.forEach(tag => this.allUnusedTags?.set(tag.id, tag));
-    this.questions.forEach(q => q.questionoptions.forEach(to => { if (to.tagid) this.allUnusedTags?.delete(to.tagid); }));
+
+    // Need to extract this to a local variable because "this" is different inside of a forEach closure
+    const unusedTags = new Map<number, Tag>();
+    tags.forEach(tag => {
+      unusedTags.set(tag.id, tag);
+    });
+    this.questions.forEach(q => q.questionoptions.forEach(to => {
+      if (to.tagid) unusedTags.delete(to.tagid);
+    }));
+    this.allUnusedTags = unusedTags;
   }
 
   openCreateDialog() {
