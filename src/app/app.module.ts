@@ -13,7 +13,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion'
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatInput, MatInputModule } from '@angular/material/input';
@@ -25,6 +25,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { TaggingComponent } from './tagging/tagging.component';
 import { SearchingComponent } from './searching/searching.component';
@@ -115,6 +116,7 @@ export function initApp(appService: AppService) {
     MatSlideToggleModule,
     MatSnackBarModule,
     MatTabsModule,
+    MatTooltipModule,
     HttpClientModule,
     FileSaverModule,
     FormsModule,

@@ -12,44 +12,44 @@ import { QuestionEditDialogComponent } from './question-edit-dialog/question-edi
 })
 export class QuestionSettingsComponent implements OnInit {
 
-  public questions?: QuestionWithOptions[]
-  public allUnusedTags?: Map<number, Tag>
+  public questions?: QuestionWithOptions[];
+  public allUnusedTags?: Map<number, Tag>;
   public get unusedTagIDs(): number[] | undefined {
     if (this.allUnusedTags == undefined) {
-      return undefined
+      return undefined;
     }
-    const ids: number[] = []
-    this.allUnusedTags.forEach(t => ids.push(t.id))
-    return ids
+    const ids: number[] = [];
+    this.allUnusedTags.forEach(t => ids.push(t.id));
+    return ids;
   }
 
-  private _fetchError?: Error = undefined
+  private _fetchError?: Error = undefined;
   public get fetchError(): Error | undefined {
-    return this._fetchError
+    return this._fetchError;
   }
 
   constructor(private supaService: SupabaseService, private snackbar: MatSnackBar, private dialog: MatDialog) { }
 
   ngOnInit(): void {
-    this.refreshQuestions()
+    this.refreshQuestions();
   }
 
   async refreshQuestions() {
-    const { data: tagData, error: tagError } = await this.supaService.listTags()
+    const { data: tagData, error: tagError } = await this.supaService.listTags();
     if (tagError) {
-      this._fetchError = new Error(`Failed to fetch tags: ${tagError}`)
-      return
+      this._fetchError = new Error(`Failed to fetch tags: ${tagError}`);
+      return;
     }
-    const tags = tagData as Tag[]
+    const tags = tagData as Tag[];
 
-    const { data: questionData, error: questionError } = await this.supaService.listQuestions()
+    const { data: questionData, error: questionError } = await this.supaService.listQuestions();
     if (questionError) {
-      this._fetchError = new Error(`Failed to fetch questions: ${questionError}`)
-      return
+      this._fetchError = new Error(`Failed to fetch questions: ${questionError}`);
+      return;
     }
-    this.questions = questionData as QuestionWithOptions[]
-    tags.forEach(tag => this.allUnusedTags?.set(tag.id, tag))
-    this.questions.forEach(q => q.questionoptions.forEach(to => { if (to.tagid) this.allUnusedTags?.delete(to.tagid); }))
+    this.questions = questionData as QuestionWithOptions[];
+    tags.forEach(tag => this.allUnusedTags?.set(tag.id, tag));
+    this.questions.forEach(q => q.questionoptions.forEach(to => { if (to.tagid) this.allUnusedTags?.delete(to.tagid); }));
   }
 
   openCreateDialog() {
@@ -60,64 +60,65 @@ export class QuestionSettingsComponent implements OnInit {
           orderingID: -1,
           questionText: "",
           mutuallyExclusive: false,
-          questionoptions: []
+          questionoptions: [],
+          description: null,
         } as QuestionWithOptions
 
       }
-    }).afterClosed().subscribe(async (result?: { question: QuestionPatchWithOptions, options: QuestionOptionCreate[] }) => {
+    }).afterClosed().subscribe(async (result?: { question: QuestionPatchWithOptions, options: QuestionOptionCreate[]; }) => {
       if (result) {
         const error = await this.supaService.createQuestion({
           questionText: result.question.questionText ? result.question.questionText : "",
           orderingID: result.question.orderingID ? result.question.orderingID : -1,
           mutuallyExclusive: result.question.mutuallyExclusive,
-        }, result.options)
+        }, result.options);
         if (error) {
-          this.snackbar.open(`Failed to create question: ${error}`, undefined, { duration: 7500 })
-          return
+          this.snackbar.open(`Failed to create question: ${error}`, undefined, { duration: 7500 });
+          return;
         }
-        this.refreshQuestions()
+        this.refreshQuestions();
         this.snackbar.open("Question created successfully", undefined, {
           duration: 3000
-        })
+        });
       }
     });
   }
 
   async updateQuestion(id: number, $event: QuestionPatch, options?: QuestionOptionCreate[]) {
-    const patch = $event as QuestionPatch
-    const error = await this.supaService.patchQuestion(id, patch, options)
+    const patch = $event as QuestionPatch;
+    const error = await this.supaService.patchQuestion(id, patch, options);
     if (error) {
-      this.snackbar.open(`Failed to update question: ${error}`, undefined, { duration: 7500 })
-      return
+      this.snackbar.open(`Failed to update question: ${error}`, undefined, { duration: 7500 });
+      return;
     }
-    this.refreshQuestions()
+    this.refreshQuestions();
     this.snackbar.open("Question updated successfully", undefined, {
       duration: 3000
-    })
+    });
   }
 
   async deleteQuestion(id: number) {
-    const error = await this.supaService.deleteQuestion(id)
+    const error = await this.supaService.deleteQuestion(id);
     if (error) {
-      this.snackbar.open(`Failed to delete question: ${error}`, undefined, { duration: 7500 })
-      return
+      this.snackbar.open(`Failed to delete question: ${error}`, undefined, { duration: 7500 });
+      return;
     }
-    this.refreshQuestions()
+    this.refreshQuestions();
     this.snackbar.open("Question deleted successfully", undefined, {
       duration: 3000
-    })
+    });
   }
 
   async reorderQuestions(newOrder: number[]) {
-    const error = await this.supaService.reorderQuestions(newOrder)
+    const error = await this.supaService.reorderQuestions(newOrder);
     if (error) {
-      this.snackbar.open(`Failed to reorder questions: ${error}`, undefined, { duration: 7500 })
-      return
+      this.snackbar.open(`Failed to reorder questions: ${error}`, undefined, { duration: 7500 });
+      return;
     }
-    this.refreshQuestions()
+    this.refreshQuestions();
     this.snackbar.open("Question reordered successfully", undefined, {
       duration: 3000
-    })
+    });
   }
 }
 
@@ -128,7 +129,7 @@ export class QuestionSettingsComponent implements OnInit {
 })
 export class QuestionDeleteDialogComponent implements OnInit {
 
-  constructor(public dialogRef: MatDialogRef<QuestionDeleteDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { questionText: string }) { }
+  constructor(public dialogRef: MatDialogRef<QuestionDeleteDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { questionText: string; }) { }
 
   ngOnInit(): void {
   }
@@ -141,30 +142,30 @@ export class QuestionDeleteDialogComponent implements OnInit {
   styleUrls: ['./question-reorder-dialog.component.sass']
 })
 export class QuestionReorderDialogComponent implements OnInit {
-  questions?: QuestionWithOptions[]
-  questionsBackup?: QuestionWithOptions[] // Keep a backup, it's easier to copy this and move around our entry
-  questionErr?: string
+  questions?: QuestionWithOptions[];
+  questionsBackup?: QuestionWithOptions[]; // Keep a backup, it's easier to copy this and move around our entry
+  questionErr?: string;
 
-  newOrder?: number[] = undefined
+  newOrder?: number[] = undefined;
 
-  selectedQuestionIndex: number = -1
+  selectedQuestionIndex: number = -1;
 
-  constructor(public dialogRef: MatDialogRef<QuestionReorderDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { reorderQuestion: QuestionWithOptions }, private supaService: SupabaseService) { }
+  constructor(public dialogRef: MatDialogRef<QuestionReorderDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { reorderQuestion: QuestionWithOptions; }, private supaService: SupabaseService) { }
 
   async ngOnInit(): Promise<void> {
-    const { data, error } = await this.supaService.listQuestions()
+    const { data, error } = await this.supaService.listQuestions();
     if (error) {
-      this.questionErr = error.toString()
+      this.questionErr = error.toString();
     } else {
-      this.questions = data as QuestionWithOptions[]
-      this.questionsBackup = data as QuestionWithOptions[]
+      this.questions = data as QuestionWithOptions[];
+      this.questionsBackup = data as QuestionWithOptions[];
       // Find index of given question, selected question is the one before that
-      const indexOfOurQuestion = this.questions.findIndex(q => q.id == this.data.reorderQuestion.id)
+      const indexOfOurQuestion = this.questions.findIndex(q => q.id == this.data.reorderQuestion.id);
       if (indexOfOurQuestion == 0) {
-        this.selectedQuestionIndex = -1
+        this.selectedQuestionIndex = -1;
       } else {
-        const questionBeforeOurs = this.questions[indexOfOurQuestion - 1]
-        this.selectedQuestionIndex = questionBeforeOurs.id
+        const questionBeforeOurs = this.questions[indexOfOurQuestion - 1];
+        this.selectedQuestionIndex = questionBeforeOurs.id;
       }
     }
   }
@@ -172,22 +173,22 @@ export class QuestionReorderDialogComponent implements OnInit {
   questionPrecursorChanged($event: MatSelectChange) {
     // Start building a new list in a loop
     // If the question we're on matches the one we're going after, also add the moving question
-    let newOrder: QuestionWithOptions[] = []
+    let newOrder: QuestionWithOptions[] = [];
     if ($event.value == -1) {
-      newOrder.push(this.data.reorderQuestion) // Move this question to be first
+      newOrder.push(this.data.reorderQuestion); // Move this question to be first
     }
     this.questionsBackup?.forEach(q => {
       if (q.id == this.data.reorderQuestion.id) {
-        return
+        return;
       }
 
-      newOrder.push(q)
+      newOrder.push(q);
       if (q.id == $event.value) {
-        newOrder.push(this.data.reorderQuestion)
+        newOrder.push(this.data.reorderQuestion);
       }
-    })
+    });
 
-    this.questions = newOrder
+    this.questions = newOrder;
   }
 
 }

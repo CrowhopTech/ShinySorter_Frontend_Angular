@@ -1,19 +1,32 @@
 <mat-spinner *ngIf="question === undefined" diameter="50"></mat-spinner>
 <div *ngIf="question && question.id !== -1">
     <h1>{{question.questionText}}</h1>
+    <div *ngIf="question.description" class="pb-3 text-base">
+        {{question.description}}
+    </div>
     <mat-radio-group *ngIf="question.mutuallyExclusive" class="flex flex-col">
-        <mat-radio-button disableRipple class="py-1" value="-1" (change)="radioChanged($event)"
+        <mat-radio-button disableRipple class="py-1 text-base" value="-1" (change)="radioChanged($event)"
             [checked]="isTagChecked(-1)">
             (none)</mat-radio-button>
-        <mat-radio-button *ngFor="let option of question.questionoptions" disableRipple class="py-1"
+        <mat-radio-button *ngFor="let option of question.questionoptions" disableRipple class="py-1 text-base"
             value="{{option.tagid}}" (change)="radioChanged($event)" [checked]="isTagChecked(option.tagid)">
-            {{option.optiontext}}</mat-radio-button>
+            <span>
+                {{option.optiontext}} <mat-icon *ngIf="option.description" class="align-bottom scale-75"
+                    [matTooltip]="option.description ? option.description : ''" matTooltipPosition="right"
+                    matTooltipClass="text-base">help</mat-icon>
+            </span>
+        </mat-radio-button>
     </mat-radio-group>
     <div *ngIf="!question.mutuallyExclusive" class="flex flex-col">
-        <mat-checkbox disableRipple class="py-1" *ngFor="let option of question.questionoptions"
+        <mat-checkbox disableRipple class="py-1 text-base" *ngFor="let option of question.questionoptions"
             value="{{option.tagid}}" (change)="checkboxChanged(option.tagid)($event)"
             [checked]="isTagChecked(option.tagid)">
-            {{option.optiontext}}</mat-checkbox>
+            <span>
+                {{option.optiontext}} <mat-icon *ngIf="option.description" class="align-bottom scale-75"
+                    [matTooltip]="option.description ? option.description : ''" matTooltipPosition="right"
+                    matTooltipClass="text-base">help</mat-icon>
+            </span>
+        </mat-checkbox>
     </div>
 </div>
 <div *ngIf="question === null" class="flex flex-col">

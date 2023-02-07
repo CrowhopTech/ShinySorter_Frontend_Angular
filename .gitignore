@@ -42,4 +42,4 @@ testem.log
 Thumbs.db
 
 # Ignored so you can put dev credentials in
-src/assets/app.config.json
+src/assets

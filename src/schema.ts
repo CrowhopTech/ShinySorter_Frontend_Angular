@@ -58,18 +58,21 @@ export interface Database {
           tagid: number | null
           questionid: number | null
           optiontext: string | null
+          description: string | null
         }
         Insert: {
           id?: number
           tagid?: number | null
           questionid?: number | null
           optiontext?: string | null
+          description?: string | null
         }
         Update: {
           id?: number
           tagid?: number | null
           questionid?: number | null
           optiontext?: string | null
+          description?: string | null
         }
       }
       questions: {
@@ -78,18 +81,21 @@ export interface Database {
           orderingID: number
           questionText: string
           mutuallyExclusive: boolean
+          description: string | null
         }
         Insert: {
           id?: number
           orderingID?: number
           questionText?: string
           mutuallyExclusive?: boolean
+          description?: string | null
         }
         Update: {
           id?: number
           orderingID?: number
           questionText?: string
           mutuallyExclusive?: boolean
+          description?: string | null
         }
       }
       tags: {
