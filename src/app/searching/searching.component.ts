@@ -20,19 +20,20 @@ export class SearchingComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.queryManager.ngOnInit();
-    this.apiUtility.updateTagCache();
-
+    // Handler for escape to exit the image viewer
     fromEvent(document, 'keydown').
       pipe(
+        filter(_ => this.queryManager.viewingFileID != -1), // Only when image viewer is open
         map((e: Event) => e as KeyboardEvent),
         filter((e: KeyboardEvent) => e.type === "keydown"),
         distinctUntilChanged(),
         filter((e: KeyboardEvent) => e.key == "Escape")).
       subscribe((_: KeyboardEvent) => {
-        if (this.queryManager.viewingFileID != -1) {
-          this.queryManager.viewClose();
-        }
+        this.queryManager.viewClose();
       });
+    await Promise.all([
+      this.queryManager.ngOnInit(),
+      this.apiUtility.updateTagCache()
+    ]);
   }
 }
