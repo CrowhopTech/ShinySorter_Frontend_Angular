@@ -1,8 +1,12 @@
 <div *ngIf="allUnusedTags && allUnusedTags.size > 0">
     <mat-card>
         <mat-card-title class="pb-3">
-            Tags Without Questions
+            <mat-icon class="scale-125 align-baseline mr-3">priority_high</mat-icon>Tags Without Questions
         </mat-card-title>
+        <mat-card-subtitle>
+            These tags will not be shown as options during the tagging process! Add them to a question so they can be
+            added to files.
+        </mat-card-subtitle>
         <mat-card-content>
             <app-tag-chip [tagIDs]="unusedTagIDs"></app-tag-chip>
         </mat-card-content>

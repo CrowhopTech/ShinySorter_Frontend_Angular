@@ -1,7 +1,7 @@
 <mat-expansion-panel>
     <mat-expansion-panel-header *ngIf="question">
         <mat-panel-title>
-            <b>{{ question.questionText }}</b>
+            <b class="mr-3">{{ question.questionText }}</b>{{ question.description}}
         </mat-panel-title>
         <mat-panel-description>
             {{ question.questionoptions.length }} options,
@@ -15,7 +15,10 @@
             <div *ngFor="let tagOption of question.questionoptions" class="flex flex-row my-1">
                 <app-tag-chip *ngIf="tagOption.tagid" [tagIDs]="[tagOption.tagid]" class="inline"></app-tag-chip>
                 <span class="ml-0.5 mt-1.5" *ngIf="apiUtility.getTagName(tagOption.tagid) != tagOption.optiontext">
-                    : {{tagOption.optiontext}}
+                    : <b>{{tagOption.optiontext}}</b>
+                </span>
+                <span class="ml-3 mt-1.5">
+                    <mat-icon class="scale-75 align-middle">help</mat-icon> {{tagOption.description}}
                 </span>
             </div>
         </div>

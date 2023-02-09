@@ -11,73 +11,74 @@ import { QuestionOption, QuestionOptionCreate, QuestionPatch, QuestionWithOption
   styleUrls: ['./question-edit-dialog.component.sass']
 })
 export class QuestionEditDialogComponent implements OnInit {
-  public questionCopy: QuestionPatch
-  public questionOptionsCopy: QuestionOptionCreate[]
-  public mutexString = ""
-  public tags?: Tag[]
+  public questionCopy: QuestionPatch;
+  public questionOptionsCopy: QuestionOptionCreate[];
+  public mutexString = "";
+  public tags?: Tag[];
 
-  boolToStr = (b: boolean) => b ? 'true' : 'false'
+  boolToStr = (b: boolean) => b ? 'true' : 'false';
 
-  constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionWithOptions }, public apiUtility: APIUtilityService, private supaService: SupabaseService) {
+  constructor(public dialogRef: MatDialogRef<QuestionEditDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: { question: QuestionWithOptions; }, public apiUtility: APIUtilityService, private supaService: SupabaseService) {
     this.questionCopy = {
       id: data.question.id,
       orderingID: data.question.orderingID,
       questionText: data.question.questionText,
       mutuallyExclusive: data.question.mutuallyExclusive,
-    }
-    this.questionOptionsCopy = data.question.questionoptions
-    this.mutexString = data.question.mutuallyExclusive ? "Allow only one selection" : "Allow selecting multiple"
+      description: data.question.description
+    };
+    this.questionOptionsCopy = data.question.questionoptions;
+    this.mutexString = data.question.mutuallyExclusive ? "Allow only one selection" : "Allow selecting multiple";
   }
 
   async ngOnInit(): Promise<void> {
-    this.apiUtility.updateTagCache()
-    const { data, error } = await this.supaService.listTags()
+    this.apiUtility.updateTagCache();
+    const { data, error } = await this.supaService.listTags();
     if (error) {
-      throw error
+      throw error;
     }
-    this.tags = data as Tag[]
+    this.tags = data as Tag[];
   }
 
   mutexChange($event: MatSlideToggleChange) {
-    this.questionCopy.mutuallyExclusive = $event.checked
-    this.mutexString = $event.checked ? "Allow only one selection" : "Allow selecting multiple"
+    this.questionCopy.mutuallyExclusive = $event.checked;
+    this.mutexString = $event.checked ? "Allow only one selection" : "Allow selecting multiple";
   }
 
   pastelColorForText(text: string | undefined): string {
     if (!text) {
-      return ""
+      return "";
     }
     const hash = text.split("").reduce((a, b) => {
       a = (a << 5) - a + b.charCodeAt(0);
       return a & a;
     }, 0);
-    const pastelStrength = '93%'
+    const pastelStrength = '93%';
     return `hsl(${hash % 360}, ${pastelStrength}, ${pastelStrength})`;
   }
 
   removeTag(tagID: number) {
     if (!this.questionCopy || !this.questionOptionsCopy) {
-      return
+      return;
     }
 
-    const idx = this.questionOptionsCopy.findIndex(to => to.tagid == tagID)
+    const idx = this.questionOptionsCopy.findIndex(to => to.tagid == tagID);
     if (idx == -1) {
-      return
+      return;
     }
 
-    this.questionOptionsCopy.splice(idx, 1)
+    this.questionOptionsCopy.splice(idx, 1);
   }
 
   addOption() {
     if (!this.tags) {
-      return
+      return;
     }
 
     // Find the lowest tag ID, just to give a consistent starting value
-    const lowestTagID = this.tags.map(t => t.id).reduce((p, c) => Math.min(p, c))
-    const lowestTagName = this.apiUtility.getTagName(lowestTagID)
+    const lowestTagID = this.tags.map(t => t.id).reduce((p, c) => Math.min(p, c));
+    const lowestTagName = this.apiUtility.getTagName(lowestTagID);
 
-    this.questionOptionsCopy.push({ tagid: lowestTagID, optiontext: lowestTagName ? lowestTagName : "", questionid: this.questionCopy.id })
+    this.questionOptionsCopy.push({ tagid: lowestTagID, optiontext: lowestTagName ? lowestTagName : "", questionid: this.questionCopy.id });
   }
 }
 
@@ -91,20 +92,22 @@ export class QuestionEditDialogComponent implements OnInit {
  * Renders a selector for which tag(s) goes to which options, and a text box for the text displayed
  */
 export class TagOptionEditComponent implements OnInit {
-  private _tagOption?: QuestionOptionCreate
+  private _tagOption?: QuestionOptionCreate;
   @Input() set tagOption(to: QuestionOptionCreate | undefined) {
-    this._tagOption = to
-    this._originalText = to ? to.optiontext : ""
-    this._originalTag = to ? to.tagid : -1
+    this._tagOption = to;
+    this._originalText = to ? to.optiontext : "";
+    this._originalTag = to ? to.tagid : -1;
+    this._originalDescription = to ? to.description : "";
   }
   get tagOption() {
-    return this._tagOption
+    return this._tagOption;
   }
 
-  @Input() tags?: Tag[] // Pass this in as an input so we don't have to fetch it n times
+  @Input() tags?: Tag[]; // Pass this in as an input so we don't have to fetch it n times
 
-  private _originalText?: string | null = null
-  private _originalTag?: number | null = -1
+  private _originalText?: string | null = null;
+  private _originalTag?: number | null = -1;
+  private _originalDescription?: string | null = null;
 
   @Output() removeTag = new EventEmitter<number>();
 
@@ -117,24 +120,33 @@ export class TagOptionEditComponent implements OnInit {
 
   optionTextChange($event: any) {
     if (!this.tagOption) {
-      return
+      return;
     }
 
-    this.tagOption.optiontext = $event.target.value
+    this.tagOption.optiontext = $event.target.value;
+  }
+
+  optionDescriptionChange($event: any) {
+    if (!this.tagOption) {
+      return;
+    }
+
+    this.tagOption.description = $event.target.value;
   }
 
   resetOption() {
-    if (!this.tagOption) { return }
+    if (!this.tagOption) { return; }
 
-    this.tagOption.optiontext = this._originalText
-    this.tagOption.tagid = this._originalTag
+    this.tagOption.optiontext = this._originalText;
+    this.tagOption.tagid = this._originalTag;
+    this.tagOption.description = this._originalDescription;
   }
 
   tagChange($event: MatSelectChange) {
     if (!this.tagOption) {
-      return
+      return;
     }
 
-    this.tagOption.tagid = $event.value
+    this.tagOption.tagid = $event.value;
   }
 }
