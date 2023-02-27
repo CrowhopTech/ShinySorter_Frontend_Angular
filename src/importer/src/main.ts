@@ -145,7 +145,7 @@ function doImport(basePath: string) {
             if (uploadError) {
                 // If error and error not "already exists": ret error
                 if (!uploadError.message.includes("already exists")) {
-                    reject(`Failed to upload file to supabase storage: ${uploadError}`);
+                    reject(`Failed to upload file to supabase storage: ${uploadError.message}`);
                     return;
                 }
 
@@ -155,7 +155,7 @@ function doImport(basePath: string) {
                 // Get existing storage row entry
                 const { data: existingStorageResult, error: existingStorageError } = await getStorageRow(basePath);
                 if (existingStorageError != undefined) {
-                    reject(`Failed to get existing storage entry: ${existingStorageError}`);
+                    reject(`Failed to get existing storage entry: ${existingStorageError.message}`);
                     return;
                 }
                 if (!existingStorageResult) {
